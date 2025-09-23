@@ -101,9 +101,12 @@ class Database:
                 )
                 session.add(feedback)
                 session.commit()
+                print(f"[DB] Feedback saved to Supabase with ID: {feedback.id}")
                 return feedback.id
         except Exception as e:
-            print(f"DB save failed, using fallback: {e}")
+            print(f"[ERROR] DB feedback save failed: {e}")
+            import traceback
+            traceback.print_exc()
             return self._fallback_save_feedback(spec_id, iteration, feedback_data, reward)
 
     def save_hidg_log(self, date: str, day: str, task: str, values_reflection: Dict[Any, Any],
@@ -309,9 +312,12 @@ class Database:
                 )
                 session.add(iteration_log)
                 session.commit()
+                print(f"[DB] Iteration log saved to Supabase with ID: {iteration_log.id}")
                 return iteration_log.id
         except Exception as e:
-            print(f"DB save failed, using fallback: {e}")
+            print(f"[ERROR] DB iteration save failed: {e}")
+            import traceback
+            traceback.print_exc()
             return self._fallback_save_iteration(session_id, iteration_number, prompt,
                                                spec_before, spec_after, evaluation_data,
                                                feedback_data, score_before, score_after, reward)

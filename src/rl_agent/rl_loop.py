@@ -203,13 +203,27 @@ class RLLoop:
             # Calculate reward
             reward = feedback_agent.calculate_reward(evaluation, previous_score, self.binary_rewards)
 
-            # Always create log files (force fallback)
-            iteration_id = f"fallback_{iteration + 1}"
-
-            # Create log files
-            self._create_fallback_logs(session_id, iteration + 1, prompt, spec_before,
-                                     spec.model_dump(), evaluation.model_dump(),
-                                     feedback_data, score_before, evaluation.score, reward)
+            # Save to database first, fallback to files if needed
+            try:
+                iteration_id = db.save_iteration_log(
+                    session_id=session_id,
+                    iteration_number=iteration + 1,
+                    prompt=prompt,
+                    spec_before=spec_before,
+                    spec_after=spec.model_dump(),
+                    evaluation_data=evaluation.model_dump(),
+                    feedback_data=feedback_data,
+                    score_before=score_before,
+                    score_after=evaluation.score,
+                    reward=reward
+                )
+                print(f"Iteration {iteration + 1} saved to database with ID: {iteration_id}")
+            except Exception as e:
+                print(f"Database save failed: {e}")
+                iteration_id = f"fallback_{iteration + 1}"
+                self._create_fallback_logs(session_id, iteration + 1, prompt, spec_before,
+                                         spec.model_dump(), evaluation.model_dump(),
+                                         feedback_data, score_before, evaluation.score, reward)
 
             # Store iteration results
             iteration_result = {

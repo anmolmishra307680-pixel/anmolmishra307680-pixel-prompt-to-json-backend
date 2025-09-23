@@ -121,8 +121,9 @@ class AdvancedRLEnvironment:
             "learning_rate": self.learning_rate
         }
 
-        # Simple policy weight update
-        policy_key = f"{spec.building_type}_{len(spec.features)}"
+        # Simple policy weight update - handle universal design types
+        design_type = getattr(spec, 'design_type', getattr(spec, 'building_type', 'unknown'))
+        policy_key = f"{design_type}_{len(spec.features)}"
         if policy_key not in self.policy_weights:
             self.policy_weights[policy_key] = 1.0
 

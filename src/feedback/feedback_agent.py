@@ -9,12 +9,31 @@ class FeedbackAgent:
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
         self.use_llm = bool(self.openai_api_key)
 
-    def run(self, spec: DesignSpec, prompt: str, evaluation: EvaluationResult = None) -> Dict[str, Any]:
+    def run(self, spec: DesignSpec, prompt: str, evaluation: EvaluationResult = None, save_to_db: bool = True) -> Dict[str, Any]:
         """BHIV Core Hook: Single entry point for orchestration"""
         if self.use_llm:
-            return self._generate_llm_feedback(spec, prompt, evaluation)
+            feedback = self._generate_llm_feedback(spec, prompt, evaluation)
         else:
-            return self._generate_heuristic_feedback(spec, prompt, evaluation)
+            feedback = self._generate_heuristic_feedback(spec, prompt, evaluation)
+        
+        # Save feedback to database if requested
+        if save_to_db:
+            try:
+                from src.db.database import Database
+                import uuid
+                db = Database()
+                spec_id = str(uuid.uuid4())  # Generate spec ID if not available
+                feedback_id = db.save_feedback(
+                    spec_id=spec_id,
+                    iteration=1,
+                    feedback_data=feedback,
+                    reward=evaluation.score / 100.0 if evaluation else 0.5
+                )
+                feedback['database_id'] = feedback_id
+            except Exception as e:
+                print(f"[WARN] Failed to save feedback to database: {e}")
+        
+        return feedback
 
     def _generate_llm_feedback(self, spec: DesignSpec, prompt: str, evaluation: EvaluationResult) -> Dict[str, Any]:
         """Generate feedback using OpenAI GPT"""

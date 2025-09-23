@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import models
-from db.models import Base
-from db.iteration_models import IterationLog
+from src.db.models import Base
+from src.db.iteration_models import IterationLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
