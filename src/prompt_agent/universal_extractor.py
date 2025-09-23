@@ -198,11 +198,11 @@ class UniversalPromptExtractor:
 
         # Enhanced dimension patterns for vehicle parts
         dimension_patterns = {
-            'length': [r'length[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:m|meter|metres?|ft|feet)\s*long'],
-            'width': [r'width[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:m|meter|metres?|ft|feet)\s*wide'],
-            'height': [r'height[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:m|meter|metres?|ft|feet)\s*(?:high|tall)'],
-            'depth': [r'depth[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:m|meter|metres?|ft|feet)\s*deep'],
-            'diameter': [r'diameter[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:m|meter|metres?|ft|feet)\s*diameter'],
+            'length': [r'length[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:cm|m|meter|metres?|ft|feet)\s*long'],
+            'width': [r'width[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:cm|m|meter|metres?|ft|feet)\s*wide'],
+            'height': [r'height[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:cm|m|meter|metres?|ft|feet)\s*(?:high|tall)'],
+            'depth': [r'depth[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:cm|m|meter|metres?|ft|feet)\s*deep'],
+            'diameter': [r'diameter[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:cm|m|meter|metres?|ft|feet)\s*diameter'],
             'weight': [r'weight[:\s]*([0-9.]+)', r'([0-9.]+)[:\s]*(?:kg|kilogram|lb|lbs|pound)']
         }
 
