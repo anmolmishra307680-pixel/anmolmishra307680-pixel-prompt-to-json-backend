@@ -425,62 +425,44 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
 async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Evaluate specification"""
     try:
-        # Import with error handling
+        # Use UniversalDesignSpec for all design types
         try:
+            from src.universal_schema import UniversalDesignSpec
             from src.schema import DesignSpec
         except ImportError:
             # Fallback if schema not available
+            class UniversalDesignSpec:
+                def __init__(self, **kwargs):
+                    for k, v in kwargs.items():
+                        setattr(self, k, v)
             class DesignSpec:
                 def __init__(self, **kwargs):
                     for k, v in kwargs.items():
                         setattr(self, k, v)
 
-        # Normalize materials to proper format
         spec_data = eval_request.spec.copy()
-
-        # Fix materials format - ensure it's a list of MaterialSpec objects
-        if "materials" in spec_data:
-            materials = spec_data["materials"]
-            normalized_materials = []
-            for material in materials:
-                if isinstance(material, dict):
-                    # Already a dict, ensure it has required fields
-                    normalized_materials.append({
-                        "type": material.get("type", "concrete"),
-                        "grade": material.get("grade", None),
-                        "properties": material.get("properties", {})
-                    })
-                elif isinstance(material, str):
-                    # Convert string to MaterialSpec format
-                    normalized_materials.append({
-                        "type": material,
-                        "grade": None,
-                        "properties": {}
-                    })
-                else:
-                    # Fallback for other types
-                    normalized_materials.append({
-                        "type": "concrete",
-                        "grade": None,
-                        "properties": {}
-                    })
-            spec_data["materials"] = normalized_materials
-
-        # Add default values for missing required fields
-        if "building_type" not in spec_data:
-            spec_data["building_type"] = "general"
-        if "stories" not in spec_data:
-            spec_data["stories"] = 1
-        if "materials" not in spec_data:
-            spec_data["materials"] = [{"type": "concrete", "grade": None, "properties": {}}]
-        if "dimensions" not in spec_data:
-            spec_data["dimensions"] = {"length": 1, "width": 1, "height": 1, "area": 1}
-        if "features" not in spec_data:
-            spec_data["features"] = []
-        if "requirements" not in spec_data:
-            spec_data["requirements"] = [eval_request.prompt]
-
-        spec = DesignSpec(**spec_data)
+        
+        # Detect if this is a universal design spec or legacy building spec
+        if "design_type" in spec_data and spec_data["design_type"] != "building":
+            # Use UniversalDesignSpec for non-building designs
+            spec = UniversalDesignSpec(**spec_data)
+        else:
+            # Use legacy DesignSpec for buildings
+            # Add default values for missing required fields
+            if "building_type" not in spec_data:
+                spec_data["building_type"] = "general"
+            if "stories" not in spec_data:
+                spec_data["stories"] = 1
+            if "materials" not in spec_data:
+                spec_data["materials"] = [{"type": "concrete", "grade": None, "properties": {}}]
+            if "dimensions" not in spec_data:
+                spec_data["dimensions"] = {"length": 1, "width": 1, "height": 1, "area": 1}
+            if "features" not in spec_data:
+                spec_data["features"] = []
+            if "requirements" not in spec_data:
+                spec_data["requirements"] = [eval_request.prompt]
+            
+            spec = DesignSpec(**spec_data)
         evaluation = evaluator_agent.run(spec, eval_request.prompt)
 
         # Save evaluation and get report ID
