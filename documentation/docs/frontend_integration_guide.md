@@ -1,190 +1,107 @@
 # Frontend Integration Guide
 
-## Quick Start Integration
+## Quick Setup
 
-### 1. Authentication Setup
+### 1. Authentication Flow
 ```javascript
-// Frontend authentication service
-class APIService {
-  constructor() {
-    this.baseURL = 'https://prompt-to-json-backend.onrender.com';
+// Get JWT token
+async function getAuthToken() {
+  const response = await fetch('/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': 'bhiv-secret-key-2024'
+    },
+    body: JSON.stringify({
+      username: 'admin',
+      password: 'bhiv2024'
+    })
+  });
+  const data = await response.json();
+  return data.access_token;
+}
+```
+
+### 2. API Client Setup
+```javascript
+class DesignAPI {
+  constructor(baseURL = 'https://prompt-to-json-backend.onrender.com') {
+    this.baseURL = baseURL;
     this.apiKey = 'bhiv-secret-key-2024';
-    this.token = localStorage.getItem('jwt_token');
+    this.token = null;
   }
 
-  async authenticate(username, password) {
-    const response = await fetch(`${this.baseURL}/token`, {
+  async authenticate() {
+    this.token = await getAuthToken();
+  }
+
+  async generateDesign(prompt) {
+    const response = await fetch(`${this.baseURL}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': this.apiKey
+        'X-API-Key': this.apiKey,
+        'Authorization': `Bearer ${this.token}`
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ prompt })
     });
-    
-    if (response.ok) {
-      const data = await response.json();
-      this.token = data.access_token;
-      localStorage.setItem('jwt_token', this.token);
-      return true;
-    }
-    return false;
-  }
-
-  getHeaders() {
-    return {
-      'Content-Type': 'application/json',
-      'X-API-Key': this.apiKey,
-      'Authorization': `Bearer ${this.token}`
-    };
+    return response.json();
   }
 }
 ```
 
-### 2. API Integration Examples
+### 3. React Hook Example
 ```javascript
-const api = new APIService();
+import { useState, useEffect } from 'react';
 
-// Generate specification
-async function generateSpec(prompt) {
+export function useDesignAPI() {
+  const [api] = useState(() => new DesignAPI());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    api.authenticate().then(() => setIsAuthenticated(true));
+  }, []);
+
+  return { api, isAuthenticated };
+}
+```
+
+## Error Handling
+```javascript
+async function safeAPICall(apiFunction) {
   try {
-    const response = await fetch(`${api.baseURL}/generate`, {
-      method: 'POST',
-      headers: api.getHeaders(),
-      body: JSON.stringify({ prompt })
-    });
-    
-    if (response.status === 401) {
-      // Token expired, re-authenticate
-      await api.authenticate('admin', 'bhiv2024');
-      return generateSpec(prompt); // Retry
-    }
-    
-    return await response.json();
+    return await apiFunction();
   } catch (error) {
-    console.error('Generation failed:', error);
+    if (error.status === 401) {
+      // Re-authenticate
+      await api.authenticate();
+      return await apiFunction();
+    }
     throw error;
   }
 }
-
-// Evaluate specification
-async function evaluateSpec(spec, prompt) {
-  const response = await fetch(`${api.baseURL}/evaluate`, {
-    method: 'POST',
-    headers: api.getHeaders(),
-    body: JSON.stringify({ spec, prompt })
-  });
-  return await response.json();
-}
-
-// RL Training
-async function runRLTraining(prompt, iterations = 3) {
-  const response = await fetch(`${api.baseURL}/iterate`, {
-    method: 'POST',
-    headers: api.getHeaders(),
-    body: JSON.stringify({ prompt, n_iter: iterations })
-  });
-  return await response.json();
-}
 ```
 
-### 3. React Integration
-```jsx
-import React, { useState, useEffect } from 'react';
+## Environment Variables
+```env
+REACT_APP_API_URL=https://prompt-to-json-backend.onrender.com
+REACT_APP_API_KEY=bhiv-secret-key-2024
+```
 
-function SpecGenerator() {
-  const [prompt, setPrompt] = useState('');
-  const [spec, setSpec] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleGenerate = async () => {
-    setLoading(true);
-    try {
-      const result = await generateSpec(prompt);
-      setSpec(result.spec);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      <input 
-        value={prompt} 
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Enter building description..."
-      />
-      <button onClick={handleGenerate} disabled={loading}>
-        {loading ? 'Generating...' : 'Generate Spec'}
-      </button>
-      {spec && <pre>{JSON.stringify(spec, null, 2)}</pre>}
-    </div>
-  );
+## TypeScript Types
+```typescript
+interface DesignSpec {
+  design_type: string;
+  materials: string[];
+  dimensions: Record<string, number>;
+  performance_specs: Record<string, any>;
+  components: string[];
+  features: string[];
+  sustainability: Record<string, any>;
+  cost_estimate?: number;
 }
-```
 
-### 4. Error Handling
-```javascript
-class APIErrorHandler {
-  static handle(response, error) {
-    if (response?.status === 401) {
-      // Redirect to login
-      window.location.href = '/login';
-    } else if (response?.status === 429) {
-      // Rate limit exceeded
-      alert('Too many requests. Please wait a moment.');
-    } else if (response?.status >= 500) {
-      // Server error
-      console.error('Server error:', error);
-      alert('Server error. Please try again later.');
-    }
-  }
+interface GenerateRequest {
+  prompt: string;
 }
-```
-
-### 5. Rate Limiting Client-Side
-```javascript
-class RateLimiter {
-  constructor(maxRequests = 20, windowMs = 60000) {
-    this.requests = [];
-    this.maxRequests = maxRequests;
-    this.windowMs = windowMs;
-  }
-
-  canMakeRequest() {
-    const now = Date.now();
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
-    return this.requests.length < this.maxRequests;
-  }
-
-  recordRequest() {
-    this.requests.push(Date.now());
-  }
-}
-```
-
-## Production Configuration
-
-### Environment Variables
-```javascript
-// config.js
-export const config = {
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
-  API_KEY: process.env.REACT_APP_API_KEY || 'bhiv-secret-key-2024',
-  TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 3
-};
-```
-
-### CORS Setup
-```javascript
-// For production deployment
-const corsOptions = {
-  origin: ['https://your-frontend-domain.com'],
-  credentials: true,
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'X-API-Key', 'Authorization']
-};
 ```

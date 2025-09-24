@@ -1,23 +1,18 @@
-# API Contract - Prompt-to-JSON Backend
+# API Contract Documentation
 
-## Base Information
-- **Base URL**: `https://prompt-to-json-backend.onrender.com`
-- **Local URL**: `http://localhost:8000`
-- **API Version**: 2.1.0
-- **OpenAPI Spec**: `/openapi.json`
-- **Interactive Docs**: `/docs`
+## Base URL
+- **Production**: `https://prompt-to-json-backend.onrender.com`
+- **Development**: `http://localhost:8000`
 
 ## Authentication
 
-### Maximum Security Authentication (Required for ALL Endpoints)
+### Required Headers
 ```http
 X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <jwt-token>
 ```
 
-**Note**: API key is required for ALL 17 endpoints. JWT token is additionally required for 16 endpoints (all except `/token`).
-
-#### Get JWT Token (Requires API Key)
+### Get JWT Token
 ```http
 POST /token
 Content-Type: application/json
@@ -37,158 +32,48 @@ X-API-Key: bhiv-secret-key-2024
 }
 ```
 
-## Core AI Endpoints
+## Core Endpoints
 
-### 1. Generate Specification
+### 1. Generate Design
 ```http
 POST /generate
 Content-Type: application/json
 X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <token>
 
 {
-  "prompt": "Modern office building with sustainable features"
+  "prompt": "Modern electric vehicle with 400-mile range"
 }
 ```
 
 **Response:**
 ```json
 {
-  "spec": {
-    "building_type": "commercial",
-    "stories": 5,
-    "materials": [
-      {
-        "type": "steel",
-        "grade": "A36",
-        "properties": {}
-      }
-    ],
-    "dimensions": {
-      "length": 50.0,
-      "width": 30.0,
-      "height": 20.0,
-      "area": 1500.0
-    },
-    "features": ["HVAC", "elevator", "parking"],
-    "requirements": ["Modern office building with sustainable features"],
-    "timestamp": "2024-01-15T10:30:45.123456"
-  },
-  "success": true,
-  "message": "Specification generated successfully"
+  "design_type": "vehicle",
+  "materials": ["carbon_fiber", "aluminum", "lithium_battery"],
+  "dimensions": {"length": 4.5, "width": 1.8, "height": 1.4},
+  "performance_specs": {"range_miles": 400, "acceleration_0_60": 3.5},
+  "components": ["electric_motor", "battery_pack", "regenerative_brakes"],
+  "features": ["autopilot", "wireless_charging", "solar_roof"],
+  "sustainability": {"carbon_footprint": "zero_emission", "recyclability": 85},
+  "cost_estimate": 45000
 }
 ```
 
-### 2. Evaluate Specification
+### 2. Evaluate Design
 ```http
 POST /evaluate
 Content-Type: application/json
 X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <token>
 
 {
-  "spec": {
-    "building_type": "commercial",
-    "stories": 5,
-    "materials": [{"type": "steel", "grade": "A36"}],
-    "dimensions": {"length": 50, "width": 30, "height": 20, "area": 1500}
-  },
-  "prompt": "Modern office building"
+  "design_spec": { /* design object */ },
+  "criteria": ["performance", "sustainability", "cost"]
 }
 ```
 
-**Response:**
-```json
-{
-  "report_id": "eval_abc123def456",
-  "evaluation": {
-    "score": 8.5,
-    "criteria": {
-      "structural_integrity": 9.0,
-      "cost_efficiency": 8.0,
-      "sustainability": 8.5,
-      "feasibility": 8.5
-    },
-    "feedback": "Well-designed commercial building with good structural properties",
-    "recommendations": ["Consider adding renewable energy features"],
-    "timestamp": "2024-01-15T10:31:15.789012"
-  },
-  "success": true,
-  "message": "Evaluation completed successfully"
-}
-```
-
-### 3. RL Training Iterations
-```http
-POST /iterate
-Content-Type: application/json
-X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
-
-{
-  "prompt": "Smart building with IoT integration",
-  "n_iter": 3
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "session_id": "rl_session_xyz789",
-  "prompt": "Smart building with IoT integration",
-  "total_iterations": 3,
-  "iterations": [
-    {
-      "iteration_number": 1,
-      "before": {"spec": {...}, "score": 7.2},
-      "after": {"spec": {...}, "score": 7.8},
-      "evaluation": {...},
-      "feedback": "Improved IoT integration",
-      "reward": 0.6,
-      "improvement": 0.6
-    }
-  ],
-  "final_spec": {...},
-  "learning_insights": {...},
-  "message": "RL training completed with 3 iterations"
-}
-```
-
-### 4. Multi-Agent Coordination
-```http
-POST /coordinated-improvement
-Content-Type: application/json
-X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
-
-{
-  "prompt": "Eco-friendly residential complex"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "result": {
-    "coordinated_spec": {...},
-    "agent_contributions": {
-      "main_agent": "Initial specification generation",
-      "evaluator_agent": "Quality assessment and scoring",
-      "rl_agent": "Iterative improvement",
-      "feedback_agent": "Learning integration"
-    },
-    "final_score": 9.2,
-    "coordination_metrics": {...}
-  },
-  "message": "Coordinated improvement completed"
-}
-```
-
-## Monitoring Endpoints
-
-### Health Check (Public)
+### 3. Health Check (Public)
 ```http
 GET /health
 ```
@@ -197,131 +82,64 @@ GET /health
 ```json
 {
   "status": "healthy",
-  "database": true,
-  "agents": ["prompt", "evaluator", "rl"],
-  "timestamp": "2024-01-15T10:30:45.123456"
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "2.1.1"
 }
 ```
 
-**Note**: This endpoint is public for monitoring purposes and does not require authentication.
-
-### Prometheus Metrics (Protected)
-```http
-GET /metrics
-X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
-```
-
-**Response:** Prometheus format metrics
-
-**Note**: This endpoint now requires full authentication for maximum security.
-
-### Agent Status (Protected)
-```http
-GET /agent-status
-X-API-Key: bhiv-secret-key-2024
-Authorization: Bearer <jwt_token>
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "agents": {
-    "main_agent": {"status": "healthy", "response_time": "45ms"},
-    "evaluator_agent": {"status": "healthy", "response_time": "32ms"},
-    "rl_agent": {"status": "healthy", "response_time": "78ms"}
-  },
-  "timestamp": "2024-01-15T10:30:45.123456"
-}
-```
-
-## Rate Limiting
-- **Protected Endpoints**: 20 requests/minute per IP (16 endpoints)
-- **Token Endpoint**: 10 requests/minute per IP
-- **Public Health Endpoint**: 20 requests/minute per IP
-- **One Public Endpoint**: /health for monitoring
+## Design Types Supported
+- `building`: Residential, commercial, industrial
+- `vehicle`: Cars, trucks, aircraft, boats
+- `electronics`: Computers, phones, IoT devices
+- `appliance`: Kitchen, HVAC, smart home
+- `furniture`: Chairs, tables, storage
 
 ## Error Responses
-
-### 400 Bad Request
 ```json
 {
-  "error": "bad_request",
-  "message": "Invalid input parameters"
+  "detail": "Authentication failed",
+  "status_code": 401
 }
 ```
 
-### 401 Unauthorized
-```json
-{
-  "detail": "Invalid or missing API key. Include X-API-Key header."
-}
+## Rate Limits
+- **Protected Endpoints**: 20 requests/minute
+- **Public Endpoints**: No limit
+
+## Integration Examples
+
+### JavaScript/React
+```javascript
+const response = await fetch('https://prompt-to-json-backend.onrender.com/generate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'bhiv-secret-key-2024',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({ prompt: 'Smart home thermostat' })
+});
 ```
 
-### 429 Too Many Requests
-```json
-{
-  "error": "Rate limit exceeded",
-  "message": "20 requests per minute allowed"
+### Python
+```python
+import requests
+
+headers = {
+    'X-API-Key': 'bhiv-secret-key-2024',
+    'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
 }
+
+response = requests.post(
+    'https://prompt-to-json-backend.onrender.com/generate',
+    headers=headers,
+    json={'prompt': 'Sustainable office building'}
+)
 ```
 
-### 500 Internal Server Error
-```json
-{
-  "error": "internal_server_error",
-  "message": "An unexpected error occurred."
-}
-```
-
-## CORS Configuration
-- **Development**: `*` (all origins)
-- **Production**: Only `FRONTEND_URL` environment variable
-- **Methods**: GET, POST
-- **Headers**: Content-Type, X-API-Key, Authorization
-
-## Frontend Integration Notes
-
-1. **Authentication Flow**:
-   - Get JWT token from `/token` endpoint (API key required for this step)
-   - Include **BOTH** `X-API-Key` and `Authorization` headers for all 16 other endpoints
-   - Token expires in 60 minutes, implement refresh logic
-   - Store token securely (avoid localStorage in production)
-   - See `docs/frontend_integration_guide.md` for complete code examples
-
-2. **Error Handling**:
-   - All errors return structured JSON with `error` and `message` fields
-   - Check `success` field in responses
-   - Handle 401 responses by refreshing token
-   - Implement exponential backoff for 429 responses
-
-3. **Rate Limiting**:
-   - Implement client-side rate limiting: 20 requests/minute for protected endpoints
-   - Token endpoint: 10 requests/minute limit
-   - Health endpoint: 20 requests/minute (public)
-   - Use client-side rate limiter (see frontend guide)
-
-4. **CORS**:
-   - Set `FRONTEND_URL` environment variable in production
-   - Development allows all origins (`*`)
-   - Production restricts to specific domains
-   - Ensure credentials are included in requests
-
-5. **Security Best Practices**:
-   - Never expose API keys in client-side code
-   - Implement token refresh before expiration
-   - Use HTTPS in production
-   - Validate all responses on client side
-   - See `docs/production_hardening.md` for complete security guide
-
-6. **Performance Optimization**:
-   - Implement request caching for repeated calls
-   - Use connection pooling for high-frequency requests
-   - Monitor response times and implement timeouts
-   - Batch requests when possible using `/batch-evaluate`
-
-## OpenAPI Integration
-- **Spec URL**: `/openapi.json`
-- **Swagger UI**: `/docs`
-- **ReDoc**: `/redoc`
+## Status Codes
+- `200`: Success
+- `401`: Authentication required
+- `429`: Rate limit exceeded
+- `500`: Server error
