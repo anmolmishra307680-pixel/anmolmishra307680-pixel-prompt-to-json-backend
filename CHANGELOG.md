@@ -2,6 +2,36 @@
 
 All notable changes to the Prompt-to-JSON Backend project are documented in this file.
 
+## [2.1.3] - 2024-09-24
+
+### 🎯 Enhanced Universal Design Evaluation System
+- **Enhanced** Comprehensive feedback system for all 5 design types
+- **Added** Design-specific evaluation criteria for buildings, vehicles, electronics, appliances, furniture
+- **Improved** Constructive feedback with actionable suggestions for each design category
+- **Fixed** UniversalDesignSpec support in `/evaluate` endpoint
+- **Enhanced** Feasibility checks with material compatibility analysis
+- **Added** Always-present suggestions even for excellent designs
+
+### 🔧 Evaluation System Improvements
+- **Fixed** Furniture evaluation incorrectly showing "Building type not specified"
+- **Added** Material-specific feedback (steel, aluminum, carbon fiber, oak, glass)
+- **Enhanced** Dimension validation with design-type-specific ranges
+- **Improved** Completeness scoring for non-building designs
+- **Added** Performance optimization suggestions for each design type
+
+### 📊 Feedback & Logging Enhancements
+- **Verified** Feedback logs generation in RL training iterations
+- **Enhanced** Iteration logs with detailed before/after comparisons
+- **Added** Policy gradient updates in advanced RL training
+- **Improved** Reward calculation with design-specific metrics
+- **Maintained** Complete audit trail in logs/advanced_rl_training_*.json
+
+### 📚 Documentation Updates
+- **Updated** Team integration documentation with latest API capabilities
+- **Enhanced** API contract with comprehensive feedback examples
+- **Added** Frontend integration guide with detailed code samples
+- **Maintained** Production-ready documentation for all design types
+
 ## [2.1.2] - 2024-01-20
 
 ### 🚗 Vehicle Dimension Extraction Enhancement
