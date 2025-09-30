@@ -1,5 +1,6 @@
-"""Prompt Agent Module - Handles prompt extraction and spec generation"""
+"""Prompt Agent Module - Legacy compatibility"""
 
-from .main_agent import MainAgent
+from .extractor import PromptExtractor
+from .universal_extractor import UniversalPromptExtractor
 
-__all__ = ['MainAgent']
+__all__ = ['PromptExtractor', 'UniversalPromptExtractor']

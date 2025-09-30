@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from src.schema import DesignSpec
+from src.schemas.legacy_schema import DesignSpec
 
 class RLLoop:
     def __init__(self, max_iterations: int = 3, binary_rewards: bool = False):
@@ -151,8 +151,8 @@ class RLLoop:
         """Run RL training loop with DB iteration logging"""
         print(f"Starting RL training loop for prompt: '{prompt}'")
 
-        from src.db.database import Database
-        from src.feedback import FeedbackAgent
+        from src.data.database import Database
+        from src.agents.feedback_agent import FeedbackAgent
         import uuid
 
         db = Database()

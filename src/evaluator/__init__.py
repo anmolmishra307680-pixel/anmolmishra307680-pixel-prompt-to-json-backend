@@ -1,7 +1,6 @@
-"""Evaluator Module - Handles evaluation logic and report generation"""
+"""Evaluator Module - Legacy compatibility"""
 
-from .evaluator_agent import EvaluatorAgent
-from .criteria import *
-from .report import *
+from .criteria import EvaluationCriteria
+from .report import ReportGenerator
 
-__all__ = ['EvaluatorAgent']
+__all__ = ['EvaluationCriteria', 'ReportGenerator']

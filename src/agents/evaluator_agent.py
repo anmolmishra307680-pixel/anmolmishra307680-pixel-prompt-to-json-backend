@@ -1,4 +1,4 @@
-from src.schema import DesignSpec, EvaluationResult
+from src.schemas.legacy_schema import DesignSpec, EvaluationResult
 from src.evaluator.criteria import EvaluationCriteria
 from src.evaluator.report import ReportGenerator
 
@@ -13,7 +13,7 @@ class EvaluatorAgent:
 
         # Save to DB via clean interface
         try:
-            from src.db.database import Database
+            from src.data.database import Database
             db = Database()
             spec_id = getattr(spec, 'id', 'unknown')
             eval_id = db.save_eval(spec_id, prompt, evaluation.model_dump(), evaluation.score)

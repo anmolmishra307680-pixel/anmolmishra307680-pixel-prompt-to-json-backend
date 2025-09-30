@@ -2,7 +2,7 @@
 
 import os
 from typing import Dict, Any, List
-from src.schema import DesignSpec, EvaluationResult
+from src.schemas.legacy_schema import DesignSpec, EvaluationResult
 
 class FeedbackAgent:
     def __init__(self):
@@ -19,7 +19,7 @@ class FeedbackAgent:
         # Save feedback to database if requested
         if save_to_db:
             try:
-                from src.db.database import Database
+                from src.data.database import Database
                 import uuid
                 db = Database()
                 spec_id = str(uuid.uuid4())  # Generate spec ID if not available

@@ -4,11 +4,11 @@ import asyncio
 import time
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-from src.prompt_agent import MainAgent
-from src.evaluator import EvaluatorAgent
-from src.rl_agent import RLLoop
-from src.feedback import FeedbackAgent
-from src.schema import DesignSpec, CoordinationResult
+from src.agents.main_agent import MainAgent
+from src.agents.evaluator_agent import EvaluatorAgent
+from src.agents.rl_agent import RLLoop
+from src.agents.feedback_agent import FeedbackAgent
+from src.schemas.legacy_schema import DesignSpec, CoordinationResult
 
 class AgentCoordinator:
     def __init__(self):

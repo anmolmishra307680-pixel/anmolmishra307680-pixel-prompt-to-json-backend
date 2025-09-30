@@ -1,5 +1,14 @@
 """FastAPI Backend for Prompt-to-JSON System"""
 
+# Fix Unicode encoding for Windows
+import sys
+import os
+if sys.platform.startswith('win'):
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
@@ -16,26 +25,26 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 # Import agents and database
-from src.prompt_agent import MainAgent
-from src.evaluator import EvaluatorAgent
-from src.rl_agent import RLLoop
-from src.db.database import Database
-from src.feedback import FeedbackAgent
+from src.agents.main_agent import MainAgent
+from src.agents.evaluator_agent import EvaluatorAgent
+from src.agents.rl_agent import RLLoop
+from src.data.database import Database
+from src.agents.feedback_agent import FeedbackAgent
 from src.core.cache import cache
 from src.core.auth import create_access_token, get_current_user
 from src.core import error_handlers
-from src.lm_adapter.lm_interface import LocalLMAdapter
+from src.core.lm_adapter import LocalLMAdapter
 from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
-from src.preview_generator import generate_preview
-from src.nlp_parser.object_parser import ObjectTargeter
-from src.spec_storage import spec_storage
-from src.compliance.proxy import compliance_proxy
-from src.geometry_storage import geometry_storage
-from src.auth_v2.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
+from src.services.preview_generator import generate_preview
+from src.core.nlp_parser import ObjectTargeter
+from src.services.spec_storage import spec_storage
+from src.services.compliance import compliance_proxy
+from src.services.geometry_storage import geometry_storage
+from src.auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
 from src.services.compute_router import compute_router
 from src.utils.system_monitoring import system_monitor, init_sentry
-from src.preview_manager import preview_manager
-from src.integrations.frontend_integration import frontend_integration
+from src.services.preview_manager import preview_manager
+from src.services.frontend_integration import frontend_integration
 from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
 from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
@@ -459,7 +468,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
             generate_request.prompt, None, "generation_v1"
         )
         # Convert to spec format
-        from src.universal_schema import UniversalDesignSpec
+        from src.schemas.universal_schema import UniversalDesignSpec
         spec = UniversalDesignSpec(**routed_result["result"])
 
         # Track business metrics
@@ -596,6 +605,7 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
             raise HTTPException(status_code=404, detail="Spec not found")
         
         # Parse target object and material change
+        from src.core.nlp_parser import ObjectTargeter
         targeter = ObjectTargeter()
         target_object_id = targeter.parse_target(body.instruction, spec_data)
         material_changes = targeter.parse_material(body.instruction)
@@ -785,7 +795,7 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
         else:
             # Generate new spec from prompt
             prompt = pipeline_data.get('prompt', 'Default building')
-            from src.lm_adapter.lm_interface import LocalLMAdapter
+            from src.core.lm_adapter import LocalLMAdapter
             adapter = LocalLMAdapter()
             spec_data = adapter.run(prompt)
         
@@ -842,8 +852,8 @@ async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key
     try:
         # Use UniversalDesignSpec for all design types
         try:
-            from src.universal_schema import UniversalDesignSpec
-            from src.schema import DesignSpec
+            from src.schemas.universal_schema import UniversalDesignSpec
+            from src.schemas.legacy_schema import DesignSpec
         except ImportError:
             # Fallback if schema not available
             class UniversalDesignSpec:
@@ -1561,7 +1571,7 @@ async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, a
         }
         
         # Apply mobile switch logic
-        from src.nlp_parser.object_parser import ObjectTargeter
+        from src.core.nlp_parser import ObjectTargeter
         targeter = ObjectTargeter()
         
         target_id = targeter.parse_target(mobile_request.instruction, spec_data)
