@@ -66,7 +66,16 @@ cp config/.env.example config/.env
 # Edit config/.env with your credentials
 ```
 
-### 3. Start Server
+### 3. Database Setup
+```bash
+# Run migrations
+alembic upgrade head
+
+# Seed initial data
+python migrations/seed.py
+```
+
+### 4. Start Server
 ```bash
 # Development
 python -m src.main
@@ -304,6 +313,29 @@ class UniversalDesignSpec:
 ---
 
 **📋 For detailed setup instructions, see `docs/README.md`**
-**🔧 For API integration, see `docs/API_CONTRACT.md`**
+**🔧 For API integration, see `docs/api_contract_v2.md`**
 **🚀 For deployment guide, see `docs/PRODUCTION_COMPLETE.md`**
 **📋 For Task 7 handover, see `docs/TASK7_HANDOVER.md`**
+**🎯 For backend integration demo, run `python demo_backend_integration.py`**
+
+## ✅ Task 7 Deliverables Complete
+
+### 📋 Handover Artifacts
+- ✅ **API Contract v2**: Complete endpoint documentation with schemas (`docs/api_contract_v2.md`)
+- ✅ **Demo Integration**: End-to-end API testing script (`demo_backend_integration.py`)
+- ✅ **Database Migrations**: Iterations and compliance tables (`alembic/versions/0002_add_iterations_and_compliance.py`)
+- ✅ **Seed Data**: Initial database population (`migrations/seed.py`)
+- ✅ **Auth Runbook**: JWT and API key management (`config/auth_runbook.md`)
+- ✅ **Compute Routing**: Local/cloud processing logic (`config/compute_routing.md`)
+- ✅ **Security Checklist**: Production security implementation (`config/security_checklist.md`)
+- ✅ **Lead Log**: Daily HIDG summaries (`src/reports/lead_log.txt`)
+
+### 🔧 Technical Improvements
+- ✅ **Enhanced Schemas**: Per-object IDs and metadata.editable support
+- ✅ **Missing Endpoints**: `/api/v1/evaluate` and `/api/v1/iterate` implemented
+- ✅ **Switch Testing**: Material change test suite (`tests/tests/test_switch.py`)
+- ✅ **Code Refactoring**: Extractor → MainAgent with LM adapter integration
+- ✅ **Database Setup**: Migration commands added to README
+- ✅ **Cleanup**: Obsolete files removed, architecture streamlined
+
+🎉 **Task 7 Complete**: Production-ready universal AI design system with comprehensive handover package!

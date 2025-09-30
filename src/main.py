@@ -1632,6 +1632,61 @@ async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: st
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/v1/evaluate")
+@limiter.limit("20/minute")
+async def evaluate_v2(request: Request, eval_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Enhanced evaluation endpoint"""
+    try:
+        spec_id = eval_data.get('spec_id')
+        criteria = eval_data.get('criteria', ['aesthetics', 'functionality', 'cost'])
+        
+        spec_data = spec_storage.get_spec(spec_id) if spec_id else eval_data.get('spec_json')
+        if not spec_data:
+            raise HTTPException(status_code=404, detail="Spec not found")
+        
+        from src.schemas.universal_schema import UniversalDesignSpec
+        spec = UniversalDesignSpec(**spec_data)
+        evaluation = evaluator_agent.run(spec, eval_data.get('prompt', 'Evaluate design'))
+        
+        eval_id = db.save_eval(spec_id or 'temp', eval_data.get('prompt', ''), evaluation.model_dump(), evaluation.score)
+        
+        return {
+            "evaluation_id": eval_id,
+            "spec_id": spec_id,
+            "scores": {
+                "overall": evaluation.score,
+                "criteria": evaluation.criteria_scores
+            },
+            "feedback": evaluation.feedback,
+            "recommendations": evaluation.recommendations
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/iterate")
+@limiter.limit("20/minute")
+async def iterate_v2(request: Request, iter_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Enhanced RL iteration endpoint"""
+    try:
+        spec_id = iter_data.get('spec_id')
+        strategy = iter_data.get('strategy', 'improve_materials')
+        max_iterations = iter_data.get('max_iterations', 3)
+        
+        results = rl_agent.run(f"Improve {spec_id} using {strategy}", max_iterations)
+        preview_url = f"/preview/{spec_id}_final.jpg"
+        
+        return {
+            "session_id": results.get('session_id'),
+            "spec_id": spec_id,
+            "iterations": results.get('iterations', []),
+            "final_spec": results.get('final_spec', {}),
+            "preview_url": preview_url
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import os

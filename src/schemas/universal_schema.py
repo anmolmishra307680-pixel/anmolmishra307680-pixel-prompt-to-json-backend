@@ -26,9 +26,28 @@ class PerformanceSpec(BaseModel):
     speed: Optional[str] = Field(default=None, description="Speed specifications")
     other_specs: Dict[str, Any] = Field(default_factory=dict, description="Other performance metrics")
 
+class DesignObject(BaseModel):
+    object_id: str = Field(default_factory=lambda: f"obj_{uuid.uuid4().hex[:8]}", description="Unique object identifier")
+    type: str = Field(description="Object type (floor, wall, chair, etc.)")
+    material: str = Field(description="Primary material")
+    dimensions: DimensionSpec = Field(default_factory=DimensionSpec, description="Object dimensions")
+    position: Dict[str, float] = Field(default_factory=lambda: {"x": 0.0, "y": 0.0, "z": 0.0}, description="3D position")
+    properties: Dict[str, Any] = Field(default_factory=dict, description="Additional properties")
+    editable: bool = Field(default=True, description="Whether object can be edited")
+
+class MetadataSpec(BaseModel):
+    editable: bool = Field(default=True, description="Whether entire design is editable")
+    version: str = Field(default="1.0", description="Design version")
+    author: str = Field(default="system", description="Design author")
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Creation timestamp")
+    modified_at: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Last modification")
+    tags: List[str] = Field(default_factory=list, description="Design tags")
+    notes: str = Field(default="", description="Design notes")
+
 class UniversalDesignSpec(BaseModel):
     design_type: str = Field(description="Type of design (building, vehicle, electronics, furniture, etc.)")
     category: str = Field(description="Specific category within design type")
+    objects: List[DesignObject] = Field(default_factory=list, description="Design objects with unique IDs")
     materials: List[MaterialSpec] = Field(default_factory=list, description="Materials used")
     dimensions: DimensionSpec = Field(default_factory=DimensionSpec, description="Physical dimensions")
     performance: PerformanceSpec = Field(default_factory=PerformanceSpec, description="Performance specifications")
@@ -40,6 +59,7 @@ class UniversalDesignSpec(BaseModel):
     target_audience: Optional[str] = Field(default=None, description="Target user group")
     estimated_cost: Optional[str] = Field(default=None, description="Estimated cost range")
     timeline: Optional[str] = Field(default=None, description="Development/construction timeline")
+    metadata: MetadataSpec = Field(default_factory=MetadataSpec, description="Design metadata with editability")
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Generation timestamp")
 
     @field_validator('materials')
