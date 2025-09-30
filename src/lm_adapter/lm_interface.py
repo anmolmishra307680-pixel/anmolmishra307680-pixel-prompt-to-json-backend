@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 import json
 import logging
-from src.universal_schema import UniversalDesignSpec
 
 class LMAdapter(ABC):
     @abstractmethod
@@ -16,6 +15,10 @@ class LocalLMAdapter(LMAdapter):
         
     def run(self, prompt: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Local RTX-3060 LM inference implementation"""
+        # Validate prompt
+        if not prompt or not prompt.strip():
+            raise ValueError("Prompt cannot be empty")
+            
         try:
             # For now, return a structured response based on prompt analysis
             # This would be replaced with actual RTX-3060 inference
