@@ -462,14 +462,9 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
     """Generate specification from prompt"""
     start_time = time.time()
     try:
-        # Route through compute router for v1 compatibility
+        # Generate spec directly using MainAgent
         system_monitor.increment_jobs()
-        routed_result = await compute_router.route_inference(
-            generate_request.prompt, None, "generation_v1"
-        )
-        # Convert to spec format
-        from src.schemas.universal_schema import UniversalDesignSpec
-        spec = UniversalDesignSpec(**routed_result["result"])
+        spec = prompt_agent.run(generate_request.prompt)
 
         # Track business metrics
         try:
