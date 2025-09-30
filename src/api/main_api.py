@@ -21,10 +21,9 @@ from src.evaluator import EvaluatorAgent
 from src.rl_agent import RLLoop
 from src.db.database import Database
 from src.feedback import FeedbackAgent
-from src.cache import cache
-from src.auth import create_access_token, get_current_user
-from src import error_handlers
-from src.universal_schema import UniversalDesignSpec
+from src.core.cache import cache
+from src.core.auth import create_access_token, get_current_user
+from src.core import error_handlers
 from src.lm_adapter.lm_interface import LocalLMAdapter
 from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
 from src.preview_generator import generate_preview
@@ -33,12 +32,12 @@ from src.spec_storage import spec_storage
 from src.compliance.proxy import compliance_proxy
 from src.geometry_storage import geometry_storage
 from src.auth_v2.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
-from src.compute_router import compute_router
-from src.system_monitoring import system_monitor, init_sentry
+from src.services.compute_router import compute_router
+from src.utils.system_monitoring import system_monitor, init_sentry
 from src.preview_manager import preview_manager
-from src.frontend_integration import frontend_integration
-from src.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
-from src.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
+from src.integrations.frontend_integration import frontend_integration
+from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
+from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
 from fastapi.security import HTTPBearer
 
