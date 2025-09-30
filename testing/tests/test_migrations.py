@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from db import models
+from src.data import models
 
 def test_migration_tables_exist():
     """Test that all required tables exist in metadata"""

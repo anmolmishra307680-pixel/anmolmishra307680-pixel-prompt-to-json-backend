@@ -1,8 +1,8 @@
 import pytest
-from src.prompt_agent import MainAgent
-from src.evaluator import EvaluatorAgent
-from src.rl_agent import RLLoop
-from src.schema import DesignSpec
+from src.agents.main_agent import MainAgent
+from src.agents.evaluator_agent import EvaluatorAgent
+from src.agents.rl_agent import RLLoop
+from src.schemas.legacy_schema import DesignSpec
 
 class TestMainAgent:
     @pytest.fixture
