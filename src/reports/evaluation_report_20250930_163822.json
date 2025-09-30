@@ -1,0 +1,64 @@
+{
+  "prompt": "Smart building",
+  "specification": {
+    "design_type": "building",
+    "category": "general",
+    "materials": [
+      {
+        "type": "standard",
+        "grade": "basic",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": 20.0,
+      "width": 15.0,
+      "height": 10.0,
+      "depth": null,
+      "diameter": null,
+      "area": 300.0,
+      "volume": null,
+      "weight": null,
+      "units": "metric"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [
+      "basic_functionality"
+    ],
+    "components": [
+      "foundation",
+      "structure",
+      "roof"
+    ],
+    "requirements": [
+      "Smart building"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T16:38:17.497451"
+  },
+  "evaluation": {
+    "score": 84.16666666666667,
+    "completeness": 75.0,
+    "format_validity": 87.5,
+    "feasibility": 90.0,
+    "feedback": [],
+    "suggestions": [
+      "Specification looks good!"
+    ],
+    "timestamp": "2025-09-30T16:38:22.299093"
+  },
+  "metadata": {
+    "generated_at": "2025-09-30T16:38:22.299206",
+    "generator": "ReportGenerator"
+  }
+}

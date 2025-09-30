@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-09-30T15:36:38.213754",
+  "prompt": "Warehouse facility",
+  "design_specification": {
+    "design_type": "building",
+    "category": "residential",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "metric"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [
+      "ac"
+    ],
+    "components": [],
+    "requirements": [
+      "Warehouse facility"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:36:36.087626"
+  },
+  "evaluation_results": {
+    "score": 92.0,
+    "completeness": 80.0,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "No dimensions specified",
+      "Concrete construction offers durability and fire resistance",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Consider energy efficiency ratings",
+      "Add accessibility features compliance",
+      "Include seismic resistance specifications"
+    ],
+    "timestamp": "2025-09-30T15:36:38.213712"
+  },
+  "summary": {
+    "overall_score": 92.0,
+    "grade": "A",
+    "key_issues": [
+      "No dimensions specified",
+      "Concrete construction offers durability and fire resistance",
+      "Well-designed building with appropriate specifications"
+    ],
+    "top_suggestions": [
+      "Consider energy efficiency ratings",
+      "Add accessibility features compliance",
+      "Include seismic resistance specifications"
+    ]
+  }
+}

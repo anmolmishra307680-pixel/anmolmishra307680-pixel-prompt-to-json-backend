@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-09-30T15:44:22.825237",
+  "prompt": "Office building",
+  "design_specification": {
+    "design_type": "building",
+    "category": "commercial",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "imperial"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [],
+    "components": [],
+    "requirements": [
+      "Office building"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": "professional",
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:44:22.825076"
+  },
+  "evaluation_results": {
+    "score": 84.0,
+    "completeness": 60.0,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "No dimensions specified",
+      "No special features specified",
+      "Concrete construction offers durability and fire resistance",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Add more detailed specifications"
+    ],
+    "timestamp": "2025-09-30T15:44:22.825198"
+  },
+  "summary": {
+    "overall_score": 84.0,
+    "grade": "B",
+    "key_issues": [
+      "No dimensions specified",
+      "No special features specified",
+      "Concrete construction offers durability and fire resistance"
+    ],
+    "top_suggestions": [
+      "Add more detailed specifications"
+    ]
+  }
+}

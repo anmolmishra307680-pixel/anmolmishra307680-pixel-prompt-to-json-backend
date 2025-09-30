@@ -1,0 +1,86 @@
+[
+  {
+    "timestamp": "2025-09-30T15:08:46.272577",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:08:46.314521",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:09:12.689564",
+    "job_type": "generation_v1",
+    "complexity": 2,
+    "compute_type": "local_rtx3060",
+    "cost": 0.002
+  },
+  {
+    "timestamp": "2025-09-30T15:30:54.281661",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:30:56.023745",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:31:20.981702",
+    "job_type": "generation_v1",
+    "complexity": 2,
+    "compute_type": "local_rtx3060",
+    "cost": 0.002
+  },
+  {
+    "timestamp": "2025-09-30T15:36:18.284274",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:36:20.024466",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:36:44.767346",
+    "job_type": "generation_v1",
+    "complexity": 2,
+    "compute_type": "local_rtx3060",
+    "cost": 0.002
+  },
+  {
+    "timestamp": "2025-09-30T15:44:33.708908",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:44:35.800005",
+    "job_type": "generation_v1",
+    "complexity": 3,
+    "compute_type": "local_rtx3060",
+    "cost": 0.003
+  },
+  {
+    "timestamp": "2025-09-30T15:45:01.100352",
+    "job_type": "generation_v1",
+    "complexity": 2,
+    "compute_type": "local_rtx3060",
+    "cost": 0.002
+  }
+]

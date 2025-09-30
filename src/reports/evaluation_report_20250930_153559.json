@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-09-30T15:35:59.342733",
+  "prompt": "Smart building",
+  "design_specification": {
+    "design_type": "building",
+    "category": "general",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "imperial"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [
+      "smart"
+    ],
+    "components": [],
+    "requirements": [
+      "Smart building"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:35:59.342572"
+  },
+  "evaluation_results": {
+    "score": 84.0,
+    "completeness": 60.0,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "Building type not specified or too generic",
+      "No dimensions specified",
+      "Concrete construction offers durability and fire resistance",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Add more detailed specifications"
+    ],
+    "timestamp": "2025-09-30T15:35:59.342696"
+  },
+  "summary": {
+    "overall_score": 84.0,
+    "grade": "B",
+    "key_issues": [
+      "Building type not specified or too generic",
+      "No dimensions specified",
+      "Concrete construction offers durability and fire resistance"
+    ],
+    "top_suggestions": [
+      "Add more detailed specifications"
+    ]
+  }
+}

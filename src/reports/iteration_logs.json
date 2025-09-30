@@ -1,0 +1,2830 @@
+[
+  {
+    "session_id": "5645fa2e-72fd-4e04-b845-b250e2e41704",
+    "iteration": 1,
+    "prompt": "Smart building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:27.237392"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:27.237494"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "0d9f6640-c346-4547-96d2-be08022344c1"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:08:29.396484"
+  },
+  {
+    "session_id": "5645fa2e-72fd-4e04-b845-b250e2e41704",
+    "iteration": 2,
+    "prompt": "Smart building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:27.237392"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart",
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:27.237392"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:31.555784"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "3bdf7fed-6a71-420b-9d82-01444f0ee9de"
+    },
+    "score_before": 84.0,
+    "score_after": 84.0,
+    "reward": 0.84,
+    "timestamp": "2025-09-30T15:08:33.711916"
+  },
+  {
+    "session_id": "ace158c9-465b-4d54-81af-cf22450a8041",
+    "iteration": 1,
+    "prompt": "Office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:35.402473"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:35.402623"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "5cc5f4b2-de44-4fb1-9775-f43b7c72eb6b"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:08:37.573000"
+  },
+  {
+    "session_id": "ace158c9-465b-4d54-81af-cf22450a8041",
+    "iteration": 2,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:35.402473"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:35.402473"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:39.761958"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "b80bdedb-47b0-4d78-b83a-51fb4df4f859"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:08:41.915355"
+  },
+  {
+    "session_id": "ace158c9-465b-4d54-81af-cf22450a8041",
+    "iteration": 3,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:35.402473"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:35.402473"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:44.070925"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "c759e318-2c2d-44ae-a258-92fcf6085fdd"
+    },
+    "score_before": 92.0,
+    "score_after": 92.0,
+    "reward": 0.92,
+    "timestamp": "2025-09-30T15:08:46.242874"
+  },
+  {
+    "session_id": "34cdf655-caba-4de9-b072-f94e1e04e762",
+    "iteration": 1,
+    "prompt": "Sustainable office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:52.686758"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:52.686853"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "435103cf-f750-4c66-abc0-55a55d4084af"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:08:54.823873"
+  },
+  {
+    "session_id": "34cdf655-caba-4de9-b072-f94e1e04e762",
+    "iteration": 2,
+    "prompt": "Sustainable office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:52.686758"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:08:52.686758"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:08:56.984909"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "1f565dc0-93d6-495f-99f3-d1ac1ef9ae03"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:08:59.153898"
+  },
+  {
+    "session_id": "8ba5abb4-1bbb-46df-b4e5-b266966af59d",
+    "iteration": 1,
+    "prompt": "Smart building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:35.320814"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:30:35.320937"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "fb996c25-6e19-42da-8f12-e9188a990480"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:30:37.484788"
+  },
+  {
+    "session_id": "8ba5abb4-1bbb-46df-b4e5-b266966af59d",
+    "iteration": 2,
+    "prompt": "Smart building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:35.320814"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart",
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:35.320814"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:30:39.632411"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "5ed97e0f-7874-474a-bf27-9d1eddcc0475"
+    },
+    "score_before": 84.0,
+    "score_after": 84.0,
+    "reward": 0.84,
+    "timestamp": "2025-09-30T15:30:41.783711"
+  },
+  {
+    "session_id": "ebebe480-c5b0-4f2d-aa4d-7c9ac6849e10",
+    "iteration": 1,
+    "prompt": "Office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:43.462386"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:30:43.462528"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "648c6e6e-ed45-4a8e-93d6-4906b456c153"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:30:45.608622"
+  },
+  {
+    "session_id": "ebebe480-c5b0-4f2d-aa4d-7c9ac6849e10",
+    "iteration": 2,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:43.462386"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:43.462386"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:30:47.742724"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "8ac8bbb9-08de-49b7-9ed6-c6dc0442ed16"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:30:49.921816"
+  },
+  {
+    "session_id": "ebebe480-c5b0-4f2d-aa4d-7c9ac6849e10",
+    "iteration": 3,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:43.462386"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:30:43.462386"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:30:52.082982"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "515a5396-ec68-4238-83a3-3e63cd1f8afd"
+    },
+    "score_before": 92.0,
+    "score_after": 92.0,
+    "reward": 0.92,
+    "timestamp": "2025-09-30T15:30:54.222926"
+  },
+  {
+    "session_id": "21b1b016-235d-42f9-a6bb-553ea82f8ea0",
+    "iteration": 1,
+    "prompt": "Sustainable office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:31:00.787172"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:31:00.787264"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "a0a0beee-3f74-4001-8d6f-3d9047791c97"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:31:02.941791"
+  },
+  {
+    "session_id": "21b1b016-235d-42f9-a6bb-553ea82f8ea0",
+    "iteration": 2,
+    "prompt": "Sustainable office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:31:00.787172"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:31:00.787172"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:31:05.090842"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "3820edb3-483f-4e8f-9f21-a1566936b94a"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:31:07.226666"
+  },
+  {
+    "session_id": "1d72ecb4-9a58-46bd-99ae-c40e71307b3a",
+    "iteration": 1,
+    "prompt": "Smart building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:35:59.342572"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:35:59.342696"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "0e0ce808-f0f6-40db-b302-2d07a74654a7"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:36:01.460846"
+  },
+  {
+    "session_id": "1d72ecb4-9a58-46bd-99ae-c40e71307b3a",
+    "iteration": 2,
+    "prompt": "Smart building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:35:59.342572"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart",
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:35:59.342572"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:03.598569"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "c2f6bf10-8eb6-4753-a5f2-f0a7337b443f"
+    },
+    "score_before": 84.0,
+    "score_after": 84.0,
+    "reward": 0.84,
+    "timestamp": "2025-09-30T15:36:05.775944"
+  },
+  {
+    "session_id": "9cb7a8b5-6768-48a2-b53a-be08ce7f06e8",
+    "iteration": 1,
+    "prompt": "Office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:07.451887"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:07.451982"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "bc312aaf-64e1-45d0-a8dc-4e0ef4c55574"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:36:09.602894"
+  },
+  {
+    "session_id": "9cb7a8b5-6768-48a2-b53a-be08ce7f06e8",
+    "iteration": 2,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:07.451887"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:07.451887"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:11.745424"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "e94a544a-27ec-4217-8c4b-27f2f3e1bf9b"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:36:13.896824"
+  },
+  {
+    "session_id": "9cb7a8b5-6768-48a2-b53a-be08ce7f06e8",
+    "iteration": 3,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:07.451887"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:07.451887"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:16.067676"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "f487987e-238a-40fc-ab01-f0d5fe7c9bd9"
+    },
+    "score_before": 92.0,
+    "score_after": 92.0,
+    "reward": 0.92,
+    "timestamp": "2025-09-30T15:36:18.253571"
+  },
+  {
+    "session_id": "b91d731b-9a60-4510-8718-7c4c9608b88f",
+    "iteration": 1,
+    "prompt": "Sustainable office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:24.815674"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:24.815799"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "3367c31c-f5a6-40bf-b55a-3e04479dbfd5"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:36:26.948764"
+  },
+  {
+    "session_id": "b91d731b-9a60-4510-8718-7c4c9608b88f",
+    "iteration": 2,
+    "prompt": "Sustainable office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:24.815674"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:36:24.815674"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:36:29.086568"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "23913947-4367-4c5e-bee1-52e484d1ffdd"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:36:31.216867"
+  },
+  {
+    "session_id": "560f4dce-98e8-4bc3-be0c-b4eac3f43089",
+    "iteration": 1,
+    "prompt": "Smart building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:14.642693"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:14.642800"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "dde66234-9a90-405d-a061-061e7cf1fd02"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:44:16.802746"
+  },
+  {
+    "session_id": "560f4dce-98e8-4bc3-be0c-b4eac3f43089",
+    "iteration": 2,
+    "prompt": "Smart building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:14.642693"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "general",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "smart",
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Smart building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": null,
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:14.642693"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "Building type not specified or too generic",
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:18.959861"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "0bff558a-5992-4697-b350-63c54aadc63a"
+    },
+    "score_before": 84.0,
+    "score_after": 84.0,
+    "reward": 0.84,
+    "timestamp": "2025-09-30T15:44:21.122786"
+  },
+  {
+    "session_id": "6c4779f6-43f0-41d4-8767-c526593af9c2",
+    "iteration": 1,
+    "prompt": "Office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:22.825076"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:22.825198"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "4b955613-8a38-490e-baea-358c4505ca8f"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:44:24.999203"
+  },
+  {
+    "session_id": "6c4779f6-43f0-41d4-8767-c526593af9c2",
+    "iteration": 2,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:22.825076"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:22.825076"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:27.198463"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "30b70c4f-dfad-4a40-b0e3-6b6a3c1e2fad"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:44:29.367898"
+  },
+  {
+    "session_id": "6c4779f6-43f0-41d4-8767-c526593af9c2",
+    "iteration": 3,
+    "prompt": "Office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:22.825076"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:22.825076"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:31.520186"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "8ea55611-cb58-40ba-9057-0a48d86391d5"
+    },
+    "score_before": 92.0,
+    "score_after": 92.0,
+    "reward": 0.92,
+    "timestamp": "2025-09-30T15:44:33.675162"
+  },
+  {
+    "session_id": "1beb10c7-ca69-4ba7-8dbe-dbe7e7ff329f",
+    "iteration": 1,
+    "prompt": "Sustainable office building",
+    "spec_before": null,
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:40.603794"
+    },
+    "evaluation": {
+      "score": 84.0,
+      "completeness": 60.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "No special features specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Add more detailed specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:40.603913"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Include more functional features based on building type",
+        "Good specification with room for enhancement"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "e26fa661-6749-4fdd-9a4b-f852c3feda2a"
+    },
+    "score_before": 0,
+    "score_after": 84.0,
+    "reward": 1.68,
+    "timestamp": "2025-09-30T15:44:42.780163"
+  },
+  {
+    "session_id": "1beb10c7-ca69-4ba7-8dbe-dbe7e7ff329f",
+    "iteration": 2,
+    "prompt": "Sustainable office building",
+    "spec_before": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:40.603794"
+    },
+    "spec_after": {
+      "design_type": "building",
+      "category": "commercial",
+      "materials": [
+        {
+          "type": "concrete",
+          "grade": "standard",
+          "properties": {}
+        }
+      ],
+      "dimensions": {
+        "length": null,
+        "width": null,
+        "height": null,
+        "depth": null,
+        "diameter": null,
+        "area": null,
+        "volume": null,
+        "weight": null,
+        "units": "imperial"
+      },
+      "performance": {
+        "power": null,
+        "efficiency": null,
+        "capacity": null,
+        "speed": null,
+        "other_specs": {}
+      },
+      "features": [
+        "parking",
+        "security"
+      ],
+      "components": [],
+      "requirements": [
+        "Sustainable office building"
+      ],
+      "constraints": [],
+      "use_cases": [],
+      "target_audience": "professional",
+      "estimated_cost": null,
+      "timeline": null,
+      "timestamp": "2025-09-30T15:44:40.603794"
+    },
+    "evaluation": {
+      "score": 92.0,
+      "completeness": 80.0,
+      "format_validity": 100,
+      "feasibility": 85.0,
+      "feedback": [
+        "No dimensions specified",
+        "Concrete construction offers durability and fire resistance",
+        "Well-designed building with appropriate specifications"
+      ],
+      "suggestions": [
+        "Consider energy efficiency ratings",
+        "Add accessibility features compliance",
+        "Include seismic resistance specifications"
+      ],
+      "timestamp": "2025-09-30T15:44:44.967976"
+    },
+    "feedback": {
+      "feedback_type": "heuristic",
+      "suggestions": [
+        "Specification looks good"
+      ],
+      "confidence": 0.9,
+      "source": "rule_based",
+      "database_id": "5eb6a539-d4aa-4deb-8eb7-bbc4777455f3"
+    },
+    "score_before": 84.0,
+    "score_after": 92.0,
+    "reward": 1.0,
+    "timestamp": "2025-09-30T15:44:47.141663"
+  }
+]

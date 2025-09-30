@@ -1,0 +1,35 @@
+[
+  {
+    "feedback_id": "51828e2a-a4bc-46c9-88e3-9e78633d3a4e",
+    "case_id": "test-case-db",
+    "feedback_data": {
+      "rating": 5
+    },
+    "result": {
+      "received": true
+    },
+    "timestamp": "2025-09-30T15:30:55.974468"
+  },
+  {
+    "feedback_id": "f23f5fac-6391-487f-bb2a-3fad7f7bdedc",
+    "case_id": "test-case-db",
+    "feedback_data": {
+      "rating": 5
+    },
+    "result": {
+      "received": true
+    },
+    "timestamp": "2025-09-30T15:36:19.985327"
+  },
+  {
+    "feedback_id": "737b9c99-0470-41e0-956b-564f838e2620",
+    "case_id": "test-case-db",
+    "feedback_data": {
+      "rating": 5
+    },
+    "result": {
+      "received": true
+    },
+    "timestamp": "2025-09-30T15:44:35.421218"
+  }
+]

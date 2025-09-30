@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-09-30T15:30:56.029008",
+  "prompt": "Sustainable office building",
+  "design_specification": {
+    "building_type": "general",
+    "stories": 1,
+    "materials": [
+      {
+        "type": "standard",
+        "grade": null,
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "area": null
+    },
+    "features": [
+      "sustainable design"
+    ],
+    "requirements": [],
+    "timestamp": "2025-09-30T15:30:56.024418"
+  },
+  "evaluation_results": {
+    "score": 84.0,
+    "completeness": 60.0,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "Building type not specified or too generic",
+      "No dimensions specified",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Add more detailed specifications"
+    ],
+    "timestamp": "2025-09-30T15:30:56.028962"
+  },
+  "summary": {
+    "overall_score": 84.0,
+    "grade": "B",
+    "key_issues": [
+      "Building type not specified or too generic",
+      "No dimensions specified",
+      "Well-designed building with appropriate specifications"
+    ],
+    "top_suggestions": [
+      "Add more detailed specifications"
+    ]
+  }
+}

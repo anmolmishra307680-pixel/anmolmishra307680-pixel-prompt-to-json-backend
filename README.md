@@ -5,7 +5,7 @@
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-green)](https://prompt-to-json-backend.onrender.com)
 [![API Version](https://img.shields.io/badge/API-v2.1.1-blue)](https://prompt-to-json-backend.onrender.com/docs)
 [![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-red)](https://prompt-to-json-backend.onrender.com/docs)
-[![Test Coverage](https://img.shields.io/badge/Coverage-29/29%20Tests%20Passing-brightgreen)](#testing)
+[![Test Coverage](https://img.shields.io/badge/Coverage-48/48%20Tests%20Passing-brightgreen)](#testing)
 [![Endpoint Status](https://img.shields.io/badge/Endpoints-17/17%20Working-brightgreen)](https://prompt-to-json-backend.onrender.com/docs)
 
 ## ✨ Universal Design System
@@ -69,10 +69,10 @@ cp config/.env.example config/.env
 ### 3. Start Server
 ```bash
 # Development
-python main.py
+python -m src.main
 
 # Production
-PRODUCTION_MODE=true python main.py
+PRODUCTION_MODE=true python -m src.main
 
 # Access points:
 # API: http://localhost:8000
@@ -153,17 +153,17 @@ prompt-to-json-backend/
 
 ## 🧪 Testing & Quality Assurance
 
-### Test Suite (29/29 Passing)
+### Test Suite (48/48 Passing)
 ```bash
 # Run all tests
-pytest testing/tests/ -v
+pytest tests/tests/ -v
 
 # Test coverage
-pytest testing/tests/ -v --cov=src --cov-report=html
+pytest tests/tests/ -v --cov=src --cov-report=html
 
 # Load testing
-python testing/load_test.py
-k6 run testing/k6-load-test.js
+python tests/load-tests/load_test.py
+k6 run tests/load-tests/k6-load-test.js
 ```
 
 ### Test Categories
@@ -232,7 +232,7 @@ docker-compose up -d
 - **Throughput**: 1000+ requests/minute
 - **Concurrent Users**: Validated for 1000+ users
 - **Error Rate**: <1% in production
-- **Test Coverage**: 29/29 tests passing
+- **Test Coverage**: 48/48 tests passing
 - **Endpoint Coverage**: 17/17 endpoints operational (100%)
 - **Authentication**: Dual auth (API Key + JWT) working
 
@@ -290,7 +290,7 @@ class UniversalDesignSpec:
 - ✅ **Universal Design System**: All 5 design categories supported
 - ✅ **Enterprise Authentication**: Dual API key + JWT system
 - ✅ **Database Integration**: Supabase PostgreSQL + SQLite fallback
-- ✅ **Comprehensive Testing**: 29/29 tests passing with authentication
+- ✅ **Comprehensive Testing**: 48/48 tests passing with authentication
 - ✅ **Production Deployment**: Live environment with monitoring
 - ✅ **Performance Validated**: 1000+ concurrent users tested
 - ✅ **Security Hardened**: Multi-layer protection implemented
@@ -303,6 +303,7 @@ class UniversalDesignSpec:
 
 ---
 
-**📋 For detailed setup instructions, see `documentation/README.md`**
-**🔧 For API integration, see `documentation/docs/api_contract.md`**
-**🚀 For deployment guide, see `documentation/PRODUCTION_COMPLETE.md`**
+**📋 For detailed setup instructions, see `docs/README.md`**
+**🔧 For API integration, see `docs/API_CONTRACT.md`**
+**🚀 For deployment guide, see `docs/PRODUCTION_COMPLETE.md`**
+**📋 For Task 7 handover, see `docs/TASK7_HANDOVER.md`**

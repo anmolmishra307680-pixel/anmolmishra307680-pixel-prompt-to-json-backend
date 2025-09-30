@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-09-30T15:44:10.794021",
+  "prompt": "Office",
+  "design_specification": {
+    "building_type": "office",
+    "stories": 1,
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": null,
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": 0.0,
+      "width": 0.0,
+      "height": 0.0,
+      "area": 0.0
+    },
+    "features": [],
+    "requirements": [],
+    "timestamp": "2025-09-30T15:44:10.793912"
+  },
+  "evaluation_results": {
+    "score": 84.0,
+    "completeness": 60.0,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "No dimensions specified",
+      "No special features specified",
+      "Concrete construction offers durability and fire resistance",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Add more detailed specifications"
+    ],
+    "timestamp": "2025-09-30T15:44:10.793997"
+  },
+  "summary": {
+    "overall_score": 84.0,
+    "grade": "B",
+    "key_issues": [
+      "No dimensions specified",
+      "No special features specified",
+      "Concrete construction offers durability and fire resistance"
+    ],
+    "top_suggestions": [
+      "Add more detailed specifications"
+    ]
+  }
+}

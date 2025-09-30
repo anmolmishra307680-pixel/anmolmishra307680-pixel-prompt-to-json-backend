@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-09-30T15:44:08.653111",
+  "prompt": "Modern office building",
+  "design_specification": {
+    "building_type": "office",
+    "stories": 5,
+    "materials": [
+      {
+        "type": "steel",
+        "grade": null,
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": 30.0,
+      "width": 25.0,
+      "height": 17.5,
+      "area": 750.0
+    },
+    "features": [
+      "elevator",
+      "parking"
+    ],
+    "requirements": [
+      "Modern office building"
+    ],
+    "timestamp": "2025-09-30T15:44:08.652756"
+  },
+  "evaluation_results": {
+    "score": 100,
+    "completeness": 100,
+    "format_validity": 100,
+    "feasibility": 85.0,
+    "feedback": [
+      "Steel frame provides excellent structural integrity",
+      "Well-designed building with appropriate specifications"
+    ],
+    "suggestions": [
+      "Consider energy efficiency ratings",
+      "Add accessibility features compliance",
+      "Include seismic resistance specifications"
+    ],
+    "timestamp": "2025-09-30T15:44:08.653087"
+  },
+  "summary": {
+    "overall_score": 100,
+    "grade": "A",
+    "key_issues": [
+      "Steel frame provides excellent structural integrity",
+      "Well-designed building with appropriate specifications"
+    ],
+    "top_suggestions": [
+      "Consider energy efficiency ratings",
+      "Add accessibility features compliance",
+      "Include seismic resistance specifications"
+    ]
+  }
+}

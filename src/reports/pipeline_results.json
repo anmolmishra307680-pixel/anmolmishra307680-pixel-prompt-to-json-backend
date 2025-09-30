@@ -1,0 +1,179 @@
+[
+  {
+    "pipeline_id": "test-pipeline-123",
+    "result": {
+      "completed": true
+    },
+    "timestamp": "2025-09-30T15:30:55.975285"
+  },
+  {
+    "pipeline_id": "mock-pipeline-test",
+    "result": {
+      "pipeline_id": "mock-pipeline-test",
+      "spec_data": {
+        "design_type": "building",
+        "category": "commercial",
+        "materials": [
+          {
+            "type": "standard",
+            "grade": null,
+            "properties": {}
+          }
+        ],
+        "dimensions": {
+          "length": null,
+          "width": null,
+          "height": null,
+          "units": "metric"
+        },
+        "performance": {
+          "power": null,
+          "efficiency": null,
+          "capacity": null,
+          "speed": null,
+          "other_specs": {}
+        },
+        "features": [],
+        "components": [
+          "main structure",
+          "control system",
+          "interface"
+        ],
+        "requirements": [],
+        "constraints": [],
+        "use_cases": [
+          "Test building for compliance"
+        ],
+        "target_audience": "general",
+        "estimated_cost": "TBD",
+        "timeline": "TBD"
+      },
+      "compliance_result": {
+        "status": "passed",
+        "score": 85,
+        "violations": []
+      },
+      "geometry_url": "/geometry/mock-pipeline-test.stl",
+      "status": "completed"
+    },
+    "timestamp": "2025-09-30T15:30:55.978258"
+  },
+  {
+    "pipeline_id": "test-pipeline-123",
+    "result": {
+      "completed": true
+    },
+    "timestamp": "2025-09-30T15:36:19.986025"
+  },
+  {
+    "pipeline_id": "mock-pipeline-test",
+    "result": {
+      "pipeline_id": "mock-pipeline-test",
+      "spec_data": {
+        "design_type": "building",
+        "category": "commercial",
+        "materials": [
+          {
+            "type": "standard",
+            "grade": null,
+            "properties": {}
+          }
+        ],
+        "dimensions": {
+          "length": null,
+          "width": null,
+          "height": null,
+          "units": "metric"
+        },
+        "performance": {
+          "power": null,
+          "efficiency": null,
+          "capacity": null,
+          "speed": null,
+          "other_specs": {}
+        },
+        "features": [],
+        "components": [
+          "main structure",
+          "control system",
+          "interface"
+        ],
+        "requirements": [],
+        "constraints": [],
+        "use_cases": [
+          "Test building for compliance"
+        ],
+        "target_audience": "general",
+        "estimated_cost": "TBD",
+        "timeline": "TBD"
+      },
+      "compliance_result": {
+        "status": "passed",
+        "score": 85,
+        "violations": []
+      },
+      "geometry_url": "/geometry/mock-pipeline-test.stl",
+      "status": "completed"
+    },
+    "timestamp": "2025-09-30T15:36:19.988558"
+  },
+  {
+    "pipeline_id": "test-pipeline-123",
+    "result": {
+      "completed": true
+    },
+    "timestamp": "2025-09-30T15:44:35.421830"
+  },
+  {
+    "pipeline_id": "mock-pipeline-test",
+    "result": {
+      "pipeline_id": "mock-pipeline-test",
+      "spec_data": {
+        "design_type": "building",
+        "category": "commercial",
+        "materials": [
+          {
+            "type": "standard",
+            "grade": null,
+            "properties": {}
+          }
+        ],
+        "dimensions": {
+          "length": null,
+          "width": null,
+          "height": null,
+          "units": "metric"
+        },
+        "performance": {
+          "power": null,
+          "efficiency": null,
+          "capacity": null,
+          "speed": null,
+          "other_specs": {}
+        },
+        "features": [],
+        "components": [
+          "main structure",
+          "control system",
+          "interface"
+        ],
+        "requirements": [],
+        "constraints": [],
+        "use_cases": [
+          "Test building for compliance"
+        ],
+        "target_audience": "general",
+        "estimated_cost": "TBD",
+        "timeline": "TBD"
+      },
+      "compliance_result": {
+        "status": "passed",
+        "score": 85,
+        "violations": []
+      },
+      "geometry_url": "/geometry/mock-pipeline-test.stl",
+      "status": "completed"
+    },
+    "timestamp": "2025-09-30T15:44:35.424352"
+  }
+]
