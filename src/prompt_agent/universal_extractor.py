@@ -40,7 +40,7 @@ class UniversalPromptExtractor:
     
     def _detect_design_type(self, prompt_lower: str) -> str:
         """Detect the type of design from prompt"""
-        if any(word in prompt_lower for word in ['building', 'house', 'office', 'warehouse']):
+        if any(word in prompt_lower for word in ['building', 'house', 'office', 'warehouse', 'apartment', 'residential']):
             return "building"
         elif any(word in prompt_lower for word in ['car', 'vehicle', 'truck', 'motorcycle']):
             return "vehicle"
@@ -58,7 +58,7 @@ class UniversalPromptExtractor:
         if design_type == "building":
             if "office" in prompt_lower:
                 return "office"
-            elif "residential" in prompt_lower or "house" in prompt_lower:
+            elif "residential" in prompt_lower or "house" in prompt_lower or "apartment" in prompt_lower:
                 return "residential"
             elif "warehouse" in prompt_lower:
                 return "warehouse"
