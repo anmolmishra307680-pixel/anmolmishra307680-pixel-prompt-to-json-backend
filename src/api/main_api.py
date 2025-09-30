@@ -472,7 +472,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
 
         # Log HIDG entry for generation completion
         try:
-            from src.hidg import log_generation_completion
+            from src.utils.hidg import log_generation_completion
             log_generation_completion(generate_request.prompt, True)
         except Exception as log_error:
             print(f"HIDG logging error: {log_error}")
@@ -492,7 +492,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
 
         # Log failed generation
         try:
-            from src.hidg import log_generation_completion
+            from src.utils.hidg import log_generation_completion
             log_generation_completion(generate_request.prompt, False)
         except Exception as log_error:
             print(f"HIDG logging error: {log_error}")
@@ -898,7 +898,7 @@ async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key
 
         # Log HIDG entry for evaluation completion
         try:
-            from src.hidg import log_evaluation_completion
+            from src.utils.hidg import log_evaluation_completion
             log_evaluation_completion(eval_request.prompt, evaluation.score)
         except Exception as log_error:
             print(f"HIDG logging error: {log_error}")
@@ -975,7 +975,7 @@ async def iterate_rl(request: Request, iterate_request: IterateRequest, api_key:
 
         # Log HIDG entry for RL training completion
         try:
-            from src.hidg import log_pipeline_completion
+            from src.utils.hidg import log_pipeline_completion
             final_score = results.get("learning_insights", {}).get("final_score")
             log_pipeline_completion(iterate_request.prompt, len(detailed_iterations), final_score)
         except Exception as log_error:
@@ -1234,14 +1234,14 @@ async def prune_logs(request: Request, retention_days: int = 30, api_key: str = 
 async def coordinated_improvement(request: Request, request_data: GenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Advanced agent coordination for optimal results"""
     try:
-        from src.agent_coordinator import AgentCoordinator
+        from src.agents.agent_coordinator import AgentCoordinator
         coordinator = AgentCoordinator()
 
         result = await coordinator.coordinated_improvement(request_data.prompt)
 
         # Log HIDG entry for coordinated improvement completion
         try:
-            from src.hidg import append_hidg_entry
+            from src.utils.hidg import append_hidg_entry
             final_score = result.get("final_score")
             score_text = f"score:{final_score:.2f}" if final_score else "completed"
             note = f"Multi-agent coordination for '{request_data.prompt[:30]}...' {score_text}"
@@ -1262,7 +1262,7 @@ async def coordinated_improvement(request: Request, request_data: GenerateReques
 async def get_agent_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get status of all AI agents"""
     try:
-        from src.agent_coordinator import AgentCoordinator
+        from src.agents.agent_coordinator import AgentCoordinator
         coordinator = AgentCoordinator()
 
         status = coordinator.get_agent_status()
