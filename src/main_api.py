@@ -25,6 +25,20 @@ from src.cache import cache
 from src.auth import create_access_token, get_current_user
 from src import error_handlers
 from src.universal_schema import UniversalDesignSpec
+from src.lm_adapter.lm_interface import LocalLMAdapter
+from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
+from src.preview_generator import generate_preview
+from src.nlp_parser.object_parser import ObjectTargeter
+from src.spec_storage import spec_storage
+from src.compliance.proxy import compliance_proxy
+from src.geometry_storage import geometry_storage
+from src.auth_v2.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
+from src.compute_router import compute_router
+from src.system_monitoring import system_monitor, init_sentry
+from src.preview_manager import preview_manager
+from src.frontend_integration import frontend_integration
+from src.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
+from src.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
 from fastapi.security import HTTPBearer
 
@@ -223,6 +237,20 @@ except ImportError:
     def update_active_sessions(count): pass
     def get_business_metrics(): return "# Metrics not available\n"
 
+# Initialize Sentry monitoring
+init_sentry()
+
+# Request tracking middleware
+@app.middleware("http")
+async def track_requests(request: Request, call_next):
+    system_monitor.increment_requests()
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        system_monitor.increment_errors()
+        raise
+
 # Initialize agents and database with error handling
 try:
     prompt_agent = MainAgent()
@@ -309,6 +337,50 @@ def token_create(request: Request, payload: TokenRequest, api_key: str = Depends
 
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+@app.post("/api/v1/auth/login")
+@limiter.limit("10/minute")
+async def login_v2(request: Request, login_data: LoginRequest, api_key: str = Depends(verify_api_key)):
+    """Enhanced JWT login with refresh tokens"""
+    try:
+        # Validate credentials
+        demo_username = os.getenv("DEMO_USERNAME")
+        demo_password = os.getenv("DEMO_PASSWORD")
+        
+        if not demo_username or not demo_password:
+            raise HTTPException(status_code=500, detail="Authentication not configured")
+        
+        if login_data.username == demo_username and login_data.password == demo_password:
+            tokens = jwt_auth.create_tokens({"username": login_data.username})
+            system_monitor.increment_requests()
+            return tokens.model_dump()
+        
+        system_monitor.increment_errors()
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        system_monitor.increment_errors()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/auth/refresh")
+@limiter.limit("20/minute")
+async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key: str = Depends(verify_api_key)):
+    """Refresh access token"""
+    try:
+        tokens = jwt_auth.refresh_access_token(refresh_data.refresh_token)
+        if not tokens:
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+        system_monitor.increment_requests()
+        return tokens.model_dump()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        system_monitor.increment_errors()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/")
 @limiter.limit("20/minute")
 async def root(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
@@ -382,7 +454,14 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
     """Generate specification from prompt"""
     start_time = time.time()
     try:
-        spec = prompt_agent.run(generate_request.prompt)
+        # Route through compute router for v1 compatibility
+        system_monitor.increment_jobs()
+        routed_result = await compute_router.route_inference(
+            generate_request.prompt, None, "generation_v1"
+        )
+        # Convert to spec format
+        from src.universal_schema import UniversalDesignSpec
+        spec = UniversalDesignSpec(**routed_result["result"])
 
         # Track business metrics
         try:
@@ -419,6 +498,343 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
         except Exception as log_error:
             print(f"HIDG logging error: {log_error}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/generate")
+@limiter.limit("20/minute")
+async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Enhanced generation with LM adapter and v2 schema"""
+    start_time = time.time()
+    try:
+        # Route inference through compute router
+        system_monitor.increment_jobs()
+        routed_result = await compute_router.route_inference(
+            body.prompt, body.context, "generation_v2"
+        )
+        spec_data = routed_result["result"]
+        
+        # Create enhanced design objects
+        from src.schemas.v2_schema import DesignObject, SceneInfo, Dimensions3D, Position3D
+        
+        # Convert to enhanced format with unique IDs and editable properties
+        objects = []
+        for i, component in enumerate(spec_data.get('components', ['main_structure'])):
+            obj = DesignObject(
+                type=component,
+                material=spec_data.get('materials', [{'type': 'standard'}])[0]['type'],
+                dimensions=Dimensions3D(width=10.0, height=3.0, depth=10.0),
+                position=Position3D(x=i*5.0, y=0.0, z=0.0),
+                editable=True,
+                properties={
+                    "design_type": spec_data.get('design_type', 'general'),
+                    "features": spec_data.get('features', [])
+                }
+            )
+            objects.append(obj)
+        
+        # Create scene info
+        scene = SceneInfo(
+            name=f"{spec_data.get('design_type', 'Design')} from prompt",
+            description=body.prompt[:100],
+            total_objects=len(objects),
+            bounding_box=Dimensions3D(width=50.0, height=20.0, depth=50.0)
+        )
+        
+        # Create enhanced spec
+        enhanced_spec = EnhancedDesignSpec(
+            objects=objects,
+            scene=scene,
+            metadata={
+                "original_spec": spec_data,
+                "generation_method": "lm_adapter",
+                "style": body.style,
+                "constraints": body.constraints
+            }
+        )
+        
+        # Generate signed preview URL
+        preview_url = await preview_manager.generate_preview(enhanced_spec.model_dump())
+        
+        processing_time = time.time() - start_time
+        
+        # Store spec for later editing
+        spec_storage.store_spec(enhanced_spec.spec_id, enhanced_spec.model_dump())
+        
+        response = GenerateResponseV2(
+            spec_id=enhanced_spec.spec_id,
+            spec_json=enhanced_spec,
+            preview_url=preview_url,
+            processing_time=processing_time
+        )
+        
+        # Track metrics
+        try:
+            from src.monitoring.custom_metrics import spec_generation_counter, agent_response_time
+            spec_generation_counter.labels(agent_type='LMAdapter', success='true').inc()
+            agent_response_time.labels(agent_name='LMAdapter').observe(processing_time)
+        except ImportError:
+            pass
+        
+        return response.model_dump()
+        
+    except Exception as e:
+        # Track failed generation
+        try:
+            from src.monitoring.custom_metrics import spec_generation_counter
+            spec_generation_counter.labels(agent_type='LMAdapter', success='false').inc()
+        except ImportError:
+            pass
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/switch")
+@limiter.limit("20/minute")
+async def switch_material(request: Request, body: SwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Switch object materials/properties based on natural language instruction"""
+    try:
+        # Get existing spec
+        spec_data = spec_storage.get_spec(body.spec_id)
+        if not spec_data:
+            raise HTTPException(status_code=404, detail="Spec not found")
+        
+        # Parse target object and material change
+        targeter = ObjectTargeter()
+        target_object_id = targeter.parse_target(body.instruction, spec_data)
+        material_changes = targeter.parse_material(body.instruction)
+        
+        if not target_object_id or not material_changes:
+            raise HTTPException(status_code=400, detail="Could not parse instruction")
+        
+        # Find and update target object
+        updated_objects = []
+        changed_object = None
+        object_before = None
+        
+        for obj in spec_data['objects']:
+            if obj['id'] == target_object_id:
+                object_before = obj.copy()
+                # Apply changes
+                if 'material' in material_changes:
+                    obj['material'] = material_changes['material']
+                if 'properties' in material_changes:
+                    if 'properties' not in obj:
+                        obj['properties'] = {}
+                    obj['properties'].update(material_changes['properties'])
+                changed_object = obj.copy()
+            updated_objects.append(obj)
+        
+        if not changed_object:
+            raise HTTPException(status_code=400, detail="Target object not found")
+        
+        # Update spec
+        spec_data['objects'] = updated_objects
+        from datetime import datetime
+        spec_data['version']['modified_at'] = datetime.now().isoformat()
+        
+        # Generate iteration ID
+        import uuid
+        iteration_id = str(uuid.uuid4())
+        
+        # Save iteration to database
+        try:
+            iteration_data = {
+                'spec_id': body.spec_id,
+                'iteration_id': iteration_id,
+                'instruction': body.instruction,
+                'object_id': target_object_id,
+                'before': object_before,
+                'after': changed_object,
+                'timestamp': datetime.now().isoformat()
+            }
+            # Save to DB (using existing iteration system)
+            db.save_iteration_log(body.spec_id, iteration_data)
+        except Exception as e:
+            print(f"Failed to save iteration: {e}")
+        
+        # Update stored spec
+        spec_storage.update_spec(body.spec_id, spec_data)
+        
+        # Generate new signed preview
+        preview_url = await preview_manager.generate_preview(spec_data)
+        
+        # Create response
+        from src.schemas.v2_schema import EnhancedDesignSpec
+        updated_spec = EnhancedDesignSpec(**spec_data)
+        
+        change_info = ChangeInfo(
+            object_id=target_object_id,
+            before=object_before,
+            after=changed_object
+        )
+        
+        response = SwitchResponse(
+            spec_id=body.spec_id,
+            updated_spec_json=updated_spec,
+            preview_url=preview_url,
+            iteration_id=iteration_id,
+            changed=change_info
+        )
+        
+        return response.model_dump()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/compliance/run_case")
+@limiter.limit("20/minute")
+async def compliance_run_case(request: Request, case_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Proxy to Soham's /run_case endpoint"""
+    try:
+        # Add case_id if not present
+        if 'case_id' not in case_data:
+            import uuid
+            case_data['case_id'] = str(uuid.uuid4())
+        
+        # Call Soham's compliance service
+        result = await compliance_proxy.run_case(case_data)
+        
+        # Store geometry if provided
+        case_id = case_data['case_id']
+        project_id = case_data.get('project_id', case_id)
+        
+        if 'geometry_data' in result:
+            # Mock geometry file storage
+            geometry_url = geometry_storage.store_geometry(
+                case_id, project_id, b"mock_geometry_data", "stl"
+            )
+            result['geometry_url'] = geometry_url
+        
+        # Save to database
+        try:
+            db.save_compliance_case(case_id, project_id, case_data, result)
+        except Exception as e:
+            print(f"Failed to save compliance case: {e}")
+        
+        return {
+            "success": True,
+            "case_id": case_id,
+            "result": result,
+            "message": "Compliance case processed"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Compliance service error: {str(e)}")
+
+@app.post("/api/v1/compliance/feedback")
+@limiter.limit("20/minute")
+async def compliance_feedback(request: Request, feedback_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Proxy to Soham's /feedback endpoint"""
+    try:
+        result = await compliance_proxy.send_feedback(feedback_data)
+        
+        # Save feedback to database
+        try:
+            case_id = feedback_data.get('case_id')
+            if case_id:
+                db.save_compliance_feedback(case_id, feedback_data, result)
+        except Exception as e:
+            print(f"Failed to save compliance feedback: {e}")
+        
+        return {
+            "success": True,
+            "result": result,
+            "message": "Compliance feedback sent"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Compliance feedback error: {str(e)}")
+
+@app.get("/geometry/{case_id}")
+async def get_geometry(case_id: str):
+    """Get geometry file for case_id"""
+    try:
+        from fastapi.responses import FileResponse
+        from pathlib import Path
+        
+        # Check for STL or ZIP file
+        geometry_dir = Path("geometry")
+        for ext in ['stl', 'zip']:
+            file_path = geometry_dir / f"{case_id}.{ext}"
+            if file_path.exists():
+                return FileResponse(
+                    path=file_path,
+                    media_type=f"application/{ext}",
+                    filename=f"{case_id}.{ext}"
+                )
+        
+        raise HTTPException(status_code=404, detail="Geometry file not found")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/pipeline/run")
+@limiter.limit("10/minute")
+async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """End-to-end compliance pipeline: spec → compliance → geometry"""
+    try:
+        import uuid
+        pipeline_id = str(uuid.uuid4())
+        
+        # Step 1: Generate or use existing spec
+        if 'spec_id' in pipeline_data:
+            spec_data = spec_storage.get_spec(pipeline_data['spec_id'])
+            if not spec_data:
+                raise HTTPException(status_code=404, detail="Spec not found")
+        else:
+            # Generate new spec from prompt
+            prompt = pipeline_data.get('prompt', 'Default building')
+            from src.lm_adapter.lm_interface import LocalLMAdapter
+            adapter = LocalLMAdapter()
+            spec_data = adapter.run(prompt)
+        
+        # Step 2: Run compliance check
+        case_data = {
+            'case_id': pipeline_id,
+            'project_id': pipeline_data.get('project_id', pipeline_id),
+            'spec_data': spec_data,
+            'compliance_rules': pipeline_data.get('compliance_rules', [])
+        }
+        
+        compliance_result = await compliance_proxy.run_case(case_data)
+        
+        # Step 3: Store geometry
+        geometry_url = geometry_storage.store_geometry(
+            pipeline_id, 
+            case_data['project_id'],
+            b"mock_geometry_data",
+            "stl"
+        )
+        
+        # Step 4: Save pipeline result
+        pipeline_result = {
+            'pipeline_id': pipeline_id,
+            'spec_data': spec_data,
+            'compliance_result': compliance_result,
+            'geometry_url': geometry_url,
+            'status': 'completed'
+        }
+        
+        try:
+            db.save_pipeline_result(pipeline_id, pipeline_result)
+        except Exception as e:
+            print(f"Failed to save pipeline result: {e}")
+        
+        return {
+            "success": True,
+            "pipeline_id": pipeline_id,
+            "spec_data": spec_data,
+            "compliance_result": compliance_result,
+            "geometry_url": geometry_url,
+            "message": "Pipeline completed successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
 
 @app.post("/evaluate")
 @limiter.limit("20/minute")
@@ -881,27 +1297,33 @@ async def get_cache_stats(request: Request, api_key: str = Depends(verify_api_ke
         raise HTTPException(status_code=500, detail="Failed to get cache stats")
 
 @app.get("/metrics")
-@limiter.limit("20/minute")
-async def get_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Protected Prometheus metrics endpoint with business metrics"""
+async def get_metrics_public():
+    """Public Prometheus metrics endpoint"""
     try:
-        from prometheus_fastapi_instrumentator import Instrumentator
-        from prometheus_client import generate_latest, REGISTRY
-
-        # Get standard metrics
-        standard_metrics = ""
-        registry = instrumentator.registry if 'instrumentator' in globals() else None
-        if registry:
-            standard_metrics = generate_latest(registry).decode('utf-8')
-
-        # Get business metrics
-        business_metrics = get_business_metrics().decode('utf-8')
-
-        # Combine metrics
-        combined_metrics = standard_metrics + "\n" + business_metrics
-        return Response(combined_metrics, media_type="text/plain")
+        system_monitor.increment_requests()
+        metrics = system_monitor.get_prometheus_metrics()
+        return Response(metrics, media_type="text/plain")
     except Exception as e:
+        system_monitor.increment_errors()
         return Response(f"# Error: {str(e)}\n", media_type="text/plain")
+
+@app.get("/api/v1/metrics/detailed")
+@limiter.limit("20/minute")
+async def get_detailed_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Detailed metrics with authentication"""
+    try:
+        system_monitor.increment_requests()
+        health_metrics = system_monitor.get_health_metrics()
+        compute_stats = compute_router.get_job_stats()
+        
+        return {
+            "health": health_metrics,
+            "compute": compute_stats,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        system_monitor.increment_errors()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/system-overview")
 @limiter.limit("20/minute")
@@ -952,6 +1374,259 @@ async def get_system_overview(request: Request, api_key: str = Depends(verify_ap
         import logging
         logging.error(f"Failed to get system overview: {e}")
         raise HTTPException(status_code=500, detail="Failed to get system overview")
+
+@app.post("/api/v1/ui/session")
+@limiter.limit("20/minute")
+async def create_ui_session(request: Request, session_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Create UI testing session for frontend integration"""
+    try:
+        import uuid
+        session_id = session_data.get('session_id', str(uuid.uuid4()))
+        
+        session = frontend_integration.create_ui_session(session_id, session_data)
+        
+        return {
+            "success": True,
+            "session": session,
+            "message": "UI session created"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/ui/flow")
+@limiter.limit("20/minute")
+async def log_ui_flow(request: Request, flow_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Log UI testing flow"""
+    try:
+        session_id = flow_data.get('session_id')
+        flow_type = flow_data.get('flow_type')  # 'generate', 'switch', 'iterate'
+        data = flow_data.get('data', {})
+        
+        if not session_id or not flow_type:
+            raise HTTPException(status_code=400, detail="session_id and flow_type required")
+        
+        frontend_integration.log_ui_flow(session_id, flow_type, data)
+        
+        return {
+            "success": True,
+            "message": f"UI flow '{flow_type}' logged"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/ui/summary")
+@limiter.limit("20/minute")
+async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get UI testing summary"""
+    try:
+        summary = frontend_integration.get_ui_test_summary()
+        return {
+            "success": True,
+            "summary": summary
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/three-js/{spec_id}")
+@limiter.limit("20/minute")
+async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get Three.js formatted data for spec"""
+    try:
+        # Get spec data
+        spec_data = spec_storage.get_spec(spec_id)
+        if not spec_data:
+            raise HTTPException(status_code=404, detail="Spec not found")
+        
+        # Convert to Three.js format
+        three_js_data = frontend_integration.prepare_three_js_data(spec_data)
+        
+        return {
+            "success": True,
+            "spec_id": spec_id,
+            "three_js_data": three_js_data,
+            "message": "Three.js data prepared"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/preview/refresh")
+@limiter.limit("10/minute")
+async def refresh_preview(request: Request, refresh_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Force refresh preview for spec"""
+    try:
+        spec_id = refresh_data.get('spec_id')
+        if not spec_id:
+            raise HTTPException(status_code=400, detail="spec_id required")
+        
+        # Get spec data
+        spec_data = spec_storage.get_spec(spec_id)
+        if not spec_data:
+            raise HTTPException(status_code=404, detail="Spec not found")
+        
+        # Force refresh preview
+        new_preview_url = await preview_manager.refresh_preview(spec_id, spec_data)
+        
+        return {
+            "success": True,
+            "spec_id": spec_id,
+            "preview_url": new_preview_url,
+            "message": "Preview refreshed"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/preview/verify")
+async def verify_preview_url(request: Request, spec_id: str, expires: int, signature: str):
+    """Verify signed preview URL"""
+    try:
+        is_valid = preview_manager.verify_preview_url(spec_id, expires, signature)
+        
+        if not is_valid:
+            raise HTTPException(status_code=401, detail="Invalid or expired preview URL")
+        
+        return {
+            "success": True,
+            "valid": True,
+            "message": "Preview URL is valid"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/preview/cleanup")
+@limiter.limit("5/minute")
+async def cleanup_stale_previews(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Cleanup stale preview URLs"""
+    try:
+        cleaned_count = preview_manager.cleanup_stale_previews()
+        
+        return {
+            "success": True,
+            "cleaned_count": cleaned_count,
+            "message": f"Cleaned up {cleaned_count} stale previews"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/mobile/generate")
+@limiter.limit("20/minute")
+async def mobile_generate(request: Request, mobile_request: MobileGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Mobile-optimized generate endpoint for React Native/Expo"""
+    try:
+        # Route through compute router
+        system_monitor.increment_jobs()
+        routed_result = await compute_router.route_inference(
+            mobile_request.prompt, mobile_request.device_info, "mobile_generation"
+        )
+        spec_data = routed_result["result"]
+        
+        # Create mobile-optimized response
+        response_data = {
+            "spec_id": spec_data.get('design_type', 'mobile') + "_" + str(int(time.time())),
+            "spec_json": spec_data,
+            "preview_url": f"/mobile/preview/{spec_data.get('design_type', 'mobile')}.jpg",
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Optimize for mobile
+        optimized_response = mobile_api.optimize_for_mobile(response_data)
+        
+        return {
+            "success": True,
+            "data": optimized_response,
+            "mobile_optimized": True,
+            "message": "Mobile generation completed"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/mobile/switch")
+@limiter.limit("20/minute")
+async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Mobile-optimized switch endpoint"""
+    try:
+        # Get existing spec (mock for mobile)
+        spec_data = {
+            'spec_id': mobile_request.spec_id,
+            'objects': [
+                {'id': 'mobile_obj_1', 'type': 'floor', 'material': 'wood', 'editable': True}
+            ]
+        }
+        
+        # Apply mobile switch logic
+        from src.nlp_parser.object_parser import ObjectTargeter
+        targeter = ObjectTargeter()
+        
+        target_id = targeter.parse_target(mobile_request.instruction, spec_data)
+        changes = targeter.parse_material(mobile_request.instruction)
+        
+        # Update object
+        for obj in spec_data['objects']:
+            if obj['id'] == target_id and 'material' in changes:
+                obj['material'] = changes['material']
+        
+        # Mobile-optimized response
+        response_data = {
+            "spec_id": mobile_request.spec_id,
+            "updated_spec_json": spec_data,
+            "preview_url": f"/mobile/preview/{mobile_request.spec_id}.jpg",
+            "changed": {
+                "object_id": target_id,
+                "material": changes.get('material', 'updated')
+            }
+        }
+        
+        optimized_response = mobile_api.optimize_for_mobile(response_data)
+        
+        return {
+            "success": True,
+            "data": optimized_response,
+            "mobile_optimized": True,
+            "message": "Mobile switch completed"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/vr/generate")
+@limiter.limit("10/minute")
+async def vr_generate(request: Request, vr_request: VRGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """VR scene generation stub for Bhavesh"""
+    try:
+        vr_scene = vr_stubs.generate_vr_scene(vr_request)
+        
+        return {
+            "success": True,
+            "vr_scene": vr_scene,
+            "message": "VR scene generated (stub implementation)"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/ar/overlay")
+@limiter.limit("10/minute")
+async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """AR overlay creation stub for Bhavesh"""
+    try:
+        ar_overlay = vr_stubs.create_ar_overlay(ar_request)
+        
+        return {
+            "success": True,
+            "ar_overlay": ar_overlay,
+            "message": "AR overlay created (stub implementation)"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

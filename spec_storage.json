@@ -1,0 +1,12 @@
+{
+  "test-123": {
+    "spec_id": "test-123",
+    "objects": [
+      {
+        "id": "obj1",
+        "type": "test",
+        "material": "steel"
+      }
+    ]
+  }
+}

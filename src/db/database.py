@@ -384,6 +384,142 @@ class Database:
             json.dump(existing_logs, f, indent=2)
 
         return iteration_id
+    
+    def save_iteration_log(self, spec_id: str, iteration_data: Dict[Any, Any]) -> str:
+        """Save simple iteration log for switch operations"""
+        try:
+            # Try to use existing iteration log system
+            return self._fallback_save_simple_iteration(spec_id, iteration_data)
+        except Exception as e:
+            print(f"Failed to save iteration log: {e}")
+            return str(uuid.uuid4())
+    
+    def _fallback_save_simple_iteration(self, spec_id: str, iteration_data: Dict[Any, Any]) -> str:
+        """Fallback to file storage for simple iteration logs"""
+        from pathlib import Path
+        from datetime import datetime
+        
+        iteration_id = iteration_data.get('iteration_id', str(uuid.uuid4()))
+        Path("logs").mkdir(exist_ok=True)
+        
+        existing_logs = []
+        iteration_file = Path("logs/switch_iterations.json")
+        if iteration_file.exists():
+            with open(iteration_file, 'r') as f:
+                existing_logs = json.load(f)
+        
+        existing_logs.append({
+            'id': iteration_id,
+            'spec_id': spec_id,
+            **iteration_data,
+            'saved_at': datetime.now().isoformat()
+        })
+        
+        with open(iteration_file, 'w') as f:
+            json.dump(existing_logs, f, indent=2)
+        
+        return iteration_id
+    
+    def save_compliance_case(self, case_id: str, project_id: str, case_data: Dict[Any, Any], result: Dict[Any, Any]) -> str:
+        """Save compliance case to database"""
+        try:
+            return self._fallback_save_compliance(case_id, project_id, case_data, result)
+        except Exception as e:
+            print(f"Failed to save compliance case: {e}")
+            return case_id
+    
+    def save_compliance_feedback(self, case_id: str, feedback_data: Dict[Any, Any], result: Dict[Any, Any]) -> str:
+        """Save compliance feedback to database"""
+        try:
+            return self._fallback_save_compliance_feedback(case_id, feedback_data, result)
+        except Exception as e:
+            print(f"Failed to save compliance feedback: {e}")
+            return str(uuid.uuid4())
+    
+    def save_pipeline_result(self, pipeline_id: str, result: Dict[Any, Any]) -> str:
+        """Save pipeline result to database"""
+        try:
+            return self._fallback_save_pipeline(pipeline_id, result)
+        except Exception as e:
+            print(f"Failed to save pipeline result: {e}")
+            return pipeline_id
+    
+    def _fallback_save_compliance(self, case_id: str, project_id: str, case_data: Dict[Any, Any], result: Dict[Any, Any]) -> str:
+        """Fallback storage for compliance cases"""
+        from pathlib import Path
+        from datetime import datetime
+        
+        Path("logs").mkdir(exist_ok=True)
+        
+        existing_logs = []
+        compliance_file = Path("logs/compliance_cases.json")
+        if compliance_file.exists():
+            with open(compliance_file, 'r') as f:
+                existing_logs = json.load(f)
+        
+        existing_logs.append({
+            'case_id': case_id,
+            'project_id': project_id,
+            'case_data': case_data,
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        with open(compliance_file, 'w') as f:
+            json.dump(existing_logs, f, indent=2)
+        
+        return case_id
+    
+    def _fallback_save_compliance_feedback(self, case_id: str, feedback_data: Dict[Any, Any], result: Dict[Any, Any]) -> str:
+        """Fallback storage for compliance feedback"""
+        from pathlib import Path
+        from datetime import datetime
+        
+        feedback_id = str(uuid.uuid4())
+        Path("logs").mkdir(exist_ok=True)
+        
+        existing_logs = []
+        feedback_file = Path("logs/compliance_feedback.json")
+        if feedback_file.exists():
+            with open(feedback_file, 'r') as f:
+                existing_logs = json.load(f)
+        
+        existing_logs.append({
+            'feedback_id': feedback_id,
+            'case_id': case_id,
+            'feedback_data': feedback_data,
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        with open(feedback_file, 'w') as f:
+            json.dump(existing_logs, f, indent=2)
+        
+        return feedback_id
+    
+    def _fallback_save_pipeline(self, pipeline_id: str, result: Dict[Any, Any]) -> str:
+        """Fallback storage for pipeline results"""
+        from pathlib import Path
+        from datetime import datetime
+        
+        Path("logs").mkdir(exist_ok=True)
+        
+        existing_logs = []
+        pipeline_file = Path("logs/pipeline_results.json")
+        if pipeline_file.exists():
+            with open(pipeline_file, 'r') as f:
+                existing_logs = json.load(f)
+        
+        existing_logs.append({
+            'pipeline_id': pipeline_id,
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        with open(pipeline_file, 'w') as f:
+            json.dump(existing_logs, f, indent=2)
+        
+        return pipeline_id
 
 # Global database instance
 db = Database()
