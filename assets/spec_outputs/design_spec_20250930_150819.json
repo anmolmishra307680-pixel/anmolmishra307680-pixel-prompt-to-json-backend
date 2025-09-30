@@ -1,0 +1,47 @@
+{
+  "prompt": "Design a hospital building",
+  "specification": {
+    "design_type": "building",
+    "category": "institutional",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "imperial"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [],
+    "components": [],
+    "requirements": [
+      "Design a hospital building"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:08:19.013964"
+  },
+  "metadata": {
+    "generated_at": "2025-09-30T15:08:19.014017",
+    "generator": "MainAgent"
+  }
+}

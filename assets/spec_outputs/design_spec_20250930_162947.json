@@ -1,0 +1,51 @@
+{
+  "prompt": "Design a modern residential apartment",
+  "specification": {
+    "design_type": "general",
+    "category": "standard",
+    "materials": [
+      {
+        "type": "standard",
+        "grade": "basic",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "metric"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [
+      "basic_functionality"
+    ],
+    "components": [
+      "main_component"
+    ],
+    "requirements": [
+      "Design a modern residential apartment"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T16:29:47.644745"
+  },
+  "metadata": {
+    "generated_at": "2025-09-30T16:29:47.644852",
+    "generator": "MainAgent"
+  }
+}

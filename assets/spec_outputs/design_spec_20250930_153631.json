@@ -1,0 +1,47 @@
+{
+  "prompt": "Office building",
+  "specification": {
+    "design_type": "building",
+    "category": "commercial",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "imperial"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [],
+    "components": [],
+    "requirements": [
+      "Office building"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": "professional",
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:36:31.780994"
+  },
+  "metadata": {
+    "generated_at": "2025-09-30T15:36:31.781055",
+    "generator": "MainAgent"
+  }
+}

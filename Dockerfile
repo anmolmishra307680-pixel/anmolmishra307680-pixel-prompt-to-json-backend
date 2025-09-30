@@ -21,7 +21,7 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src:/app \
+    PYTHONPATH=/app/src \
     PORT=8000
 
 # Copy Python packages from builder
@@ -35,7 +35,7 @@ WORKDIR /app
 COPY . /app
 
 # Create necessary directories and set permissions
-RUN mkdir -p logs spec_outputs reports && \
+RUN mkdir -p reports assets && \
     chown -R appuser:appuser /app
 
 # Switch to non-root user
@@ -46,4 +46,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
 EXPOSE $PORT
-CMD ["python", "main.py"]
+CMD ["python", "-m", "src.main"]

@@ -55,12 +55,12 @@ jobs:
       
       - name: Run tests
         run: |
-          pytest testing/tests/ -v --tb=short --disable-warnings
+          pytest tests/tests/ -v --tb=short --disable-warnings
       
       - name: Test coverage
         run: |
           pip install pytest-cov
-          pytest testing/tests/ --cov=src --cov-report=xml --cov-report=term-missing
+          pytest tests/tests/ --cov=src --cov-report=xml --cov-report=term-missing
         continue-on-error: true
       
       - name: Build Docker image

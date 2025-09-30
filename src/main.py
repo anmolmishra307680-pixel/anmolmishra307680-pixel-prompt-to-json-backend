@@ -25,28 +25,28 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 # Import agents and database
-from src.agents.main_agent import MainAgent
-from src.agents.evaluator_agent import EvaluatorAgent
-from src.agents.rl_agent import RLLoop
-from src.data.database import Database
-from src.agents.feedback_agent import FeedbackAgent
-from src.core.cache import cache
-from src.core.auth import create_access_token, get_current_user
-from src.core import error_handlers
-from src.core.lm_adapter import LocalLMAdapter
-from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
-from src.services.preview_generator import generate_preview
-from src.core.nlp_parser import ObjectTargeter
-from src.services.spec_storage import spec_storage
-from src.services.compliance import compliance_proxy
-from src.services.geometry_storage import geometry_storage
-from src.auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
-from src.services.compute_router import compute_router
-from src.utils.system_monitoring import system_monitor, init_sentry
-from src.services.preview_manager import preview_manager
-from src.services.frontend_integration import frontend_integration
-from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
-from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
+from agents.main_agent import MainAgent
+from agents.evaluator_agent import EvaluatorAgent
+from agents.rl_agent import RLLoop
+from data.database import Database
+from agents.feedback_agent import FeedbackAgent
+from core.cache import cache
+from core.auth import create_access_token, get_current_user
+from core import error_handlers
+from core.lm_adapter import LocalLMAdapter
+from schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
+from services.preview_generator import generate_preview
+from core.nlp_parser import ObjectTargeter
+from services.spec_storage import spec_storage
+from services.compliance import compliance_proxy
+from services.geometry_storage import geometry_storage
+from auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
+from services.compute_router import compute_router
+from utils.system_monitoring import system_monitor, init_sentry
+from services.preview_manager import preview_manager
+from services.frontend_integration import frontend_integration
+from api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
+from api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
 from fastapi.security import HTTPBearer
 

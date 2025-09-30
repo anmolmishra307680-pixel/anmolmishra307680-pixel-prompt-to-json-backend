@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src:/app \
+    PYTHONPATH=/app/src \
     PORT=8000
 
 # Set working directory
@@ -18,10 +18,10 @@ RUN pip install --upgrade pip && \
 COPY . /app
 
 # Create necessary directories
-RUN mkdir -p logs spec_outputs reports
+RUN mkdir -p reports assets
 
 # Expose port
 EXPOSE $PORT
 
 # Run the application
-CMD ["python", "main.py"]
+CMD ["python", "-m", "src.main"]

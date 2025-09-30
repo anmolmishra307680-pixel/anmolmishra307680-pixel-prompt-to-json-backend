@@ -1,0 +1,47 @@
+{
+  "prompt": "Residential complex",
+  "specification": {
+    "design_type": "building",
+    "category": "residential",
+    "materials": [
+      {
+        "type": "concrete",
+        "grade": "standard",
+        "properties": {}
+      }
+    ],
+    "dimensions": {
+      "length": null,
+      "width": null,
+      "height": null,
+      "depth": null,
+      "diameter": null,
+      "area": null,
+      "volume": null,
+      "weight": null,
+      "units": "metric"
+    },
+    "performance": {
+      "power": null,
+      "efficiency": null,
+      "capacity": null,
+      "speed": null,
+      "other_specs": {}
+    },
+    "features": [],
+    "components": [],
+    "requirements": [
+      "Residential complex"
+    ],
+    "constraints": [],
+    "use_cases": [],
+    "target_audience": null,
+    "estimated_cost": null,
+    "timeline": null,
+    "timestamp": "2025-09-30T15:36:40.423073"
+  },
+  "metadata": {
+    "generated_at": "2025-09-30T15:36:40.423131",
+    "generator": "MainAgent"
+  }
+}
