@@ -1,0 +1,50 @@
+{
+  "iteration_id": "521b343f-00b5-488f-a2b1-c26725a8bda2",
+  "spec_id": "test_spec_001",
+  "instruction": "make cushions orange",
+  "object_id": "392bd025-720c-4908-88d9-eb628aecf519",
+  "timestamp": "2025-10-03T17:43:35.806511",
+  "diff": {
+    "changed_fields": [],
+    "before": {
+      "id": "392bd025-720c-4908-88d9-eb628aecf519",
+      "type": "cushion",
+      "material": "fabric",
+      "editable": true,
+      "properties": {
+        "color": "orange",
+        "texture": "soft"
+      }
+    },
+    "after": {
+      "id": "392bd025-720c-4908-88d9-eb628aecf519",
+      "type": "cushion",
+      "material": "fabric",
+      "editable": true,
+      "properties": {
+        "color": "orange",
+        "texture": "soft"
+      }
+    }
+  },
+  "before": {
+    "id": "392bd025-720c-4908-88d9-eb628aecf519",
+    "type": "cushion",
+    "material": "fabric",
+    "editable": true,
+    "properties": {
+      "color": "orange",
+      "texture": "soft"
+    }
+  },
+  "after": {
+    "id": "392bd025-720c-4908-88d9-eb628aecf519",
+    "type": "cushion",
+    "material": "fabric",
+    "editable": true,
+    "properties": {
+      "color": "orange",
+      "texture": "soft"
+    }
+  }
+}

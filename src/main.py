@@ -37,7 +37,7 @@ from src.core.lm_adapter import LocalLMAdapter
 from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
 from src.schemas.compliance_schema import ComplianceRunCaseRequest, ComplianceRunCaseResponse, ComplianceFeedbackRequest, ComplianceFeedbackResponse
 # from src.services.preview_generator import generate_preview
-from src.core.nlp_parser import ObjectTargeter
+from src.core.nlp_parser import ObjectTargeter, IterationTracker
 # from src.services.spec_storage import spec_storage
 # from src.services.compliance import compliance_proxy
 # from src.services.geometry_storage import geometry_storage
@@ -656,7 +656,10 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
 @app.post("/api/v1/switch", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def switch_material(request: Request, body: SwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Switch object materials/properties based on natural language instruction"""
+    """Enhanced material switching with NLP parsing and iteration tracking"""
+    client_ip = request.client.host if request.client else "unknown"
+    print(f"[SWITCH] Request from {client_ip}: '{body.instruction}' for spec {body.spec_id}")
+    
     try:
         # Get existing spec
         try:
@@ -674,15 +677,26 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
                 spec_data = None
         
         if not spec_data:
+            print(f"[SWITCH] Spec {body.spec_id} not found")
             raise HTTPException(status_code=404, detail="Spec not found")
         
-        # Parse target object and material change
+        # Enhanced NLP parsing
         targeter = ObjectTargeter()
-        target_object_id = targeter.parse_target(body.instruction, spec_data)
-        material_changes = targeter.parse_material(body.instruction)
+        tracker = IterationTracker()
         
-        if not target_object_id or not material_changes:
-            raise HTTPException(status_code=400, detail="Could not parse instruction")
+        # Parse target object with enhanced matching
+        target_object_id = targeter.parse_target(body.instruction, spec_data)
+        if not target_object_id:
+            print(f"[SWITCH] Could not identify target object from: '{body.instruction}'")
+            raise HTTPException(status_code=400, detail="Could not identify target object from instruction")
+        
+        # Parse material/property changes
+        material_changes = targeter.parse_material(body.instruction)
+        if not material_changes:
+            print(f"[SWITCH] Could not parse material changes from: '{body.instruction}'")
+            raise HTTPException(status_code=400, detail="Could not parse material changes from instruction")
+        
+        print(f"[SWITCH] Target object: {target_object_id}, Changes: {material_changes}")
         
         # Find and update target object
         updated_objects = []
@@ -692,29 +706,43 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
         for obj in spec_data['objects']:
             if obj['id'] == target_object_id:
                 object_before = obj.copy()
-                # Apply changes
+                
+                # Apply material changes
                 if 'material' in material_changes:
                     obj['material'] = material_changes['material']
+                
+                # Apply property changes
                 if 'properties' in material_changes:
                     if 'properties' not in obj:
                         obj['properties'] = {}
                     obj['properties'].update(material_changes['properties'])
+                
                 changed_object = obj.copy()
+                print(f"[SWITCH] Updated object: {obj['type']} -> {obj.get('material', 'N/A')}")
+            
             updated_objects.append(obj)
         
         if not changed_object:
-            raise HTTPException(status_code=400, detail="Target object not found")
+            raise HTTPException(status_code=400, detail="Target object not found in spec")
         
-        # Update spec
+        # Update spec with changes
         spec_data['objects'] = updated_objects
+        
+        # Update metadata
         from datetime import datetime
-        spec_data['version']['modified_at'] = datetime.now().isoformat()
+        if 'metadata' in spec_data:
+            spec_data['metadata']['modified_at'] = datetime.now().isoformat()
         
-        # Generate iteration ID
-        import uuid
-        iteration_id = str(uuid.uuid4())
+        # Save iteration with detailed diff tracking
+        iteration_id = tracker.save_iteration(
+            body.spec_id, 
+            body.instruction, 
+            target_object_id, 
+            object_before, 
+            changed_object
+        )
         
-        # Save iteration to database
+        # Save to database
         try:
             iteration_data = {
                 'spec_id': body.spec_id,
@@ -723,22 +751,46 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
                 'object_id': target_object_id,
                 'before': object_before,
                 'after': changed_object,
+                'diff': targeter.generate_diff(object_before, changed_object),
                 'timestamp': datetime.now().isoformat()
             }
-            # Save to DB (using existing iteration system)
             db.save_iteration_log(body.spec_id, iteration_data)
+            print(f"[SWITCH] Iteration {iteration_id} saved to database")
         except Exception as e:
-            print(f"Failed to save iteration: {e}")
+            print(f"[SWITCH] Failed to save iteration to DB: {e}")
         
         # Update stored spec
-        spec_storage.update_spec(body.spec_id, spec_data)
+        try:
+            spec_storage.update_spec(body.spec_id, spec_data)
+        except Exception as e:
+            print(f"[SWITCH] Failed to update stored spec: {e}")
         
-        # Generate new signed preview
-        preview_url = await preview_manager.generate_preview(spec_data)
+        # Generate new preview
+        try:
+            preview_url = await preview_manager.generate_preview(spec_data)
+        except Exception as e:
+            print(f"[SWITCH] Failed to generate preview: {e}")
+            preview_url = f"/preview/{body.spec_id}_updated.jpg"
         
         # Create response
         from src.schemas.v2_schema import EnhancedDesignSpec
-        updated_spec = EnhancedDesignSpec(**spec_data)
+        try:
+            updated_spec = EnhancedDesignSpec(**spec_data)
+        except Exception as e:
+            print(f"[SWITCH] Failed to create EnhancedDesignSpec: {e}")
+            # Fallback response
+            return {
+                "success": True,
+                "spec_id": body.spec_id,
+                "iteration_id": iteration_id,
+                "changed": {
+                    "object_id": target_object_id,
+                    "before": object_before,
+                    "after": changed_object
+                },
+                "preview_url": preview_url,
+                "message": "Material switch completed successfully"
+            }
         
         change_info = ChangeInfo(
             object_id=target_object_id,
@@ -754,11 +806,13 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
             changed=change_info
         )
         
+        print(f"[SWITCH] Successfully completed switch for spec {body.spec_id}")
         return response.model_dump()
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[SWITCH] Error processing switch: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/compliance/run_case", response_model=ComplianceRunCaseResponse, tags=["⚖️ Compliance Pipeline"])

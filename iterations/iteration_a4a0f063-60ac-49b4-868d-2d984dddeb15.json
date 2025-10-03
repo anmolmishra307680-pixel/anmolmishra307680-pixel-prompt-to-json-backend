@@ -1,0 +1,48 @@
+{
+  "iteration_id": "a4a0f063-60ac-49b4-868d-2d984dddeb15",
+  "spec_id": "test_spec_001",
+  "instruction": "change wall to glass",
+  "object_id": "3b630302-e3c7-49a0-95c0-ce7c87e77466",
+  "timestamp": "2025-10-03T17:43:23.224295",
+  "diff": {
+    "changed_fields": [
+      "material"
+    ],
+    "before": {
+      "id": "3b630302-e3c7-49a0-95c0-ce7c87e77466",
+      "type": "wall",
+      "material": "concrete",
+      "editable": true,
+      "properties": {
+        "color": "white"
+      }
+    },
+    "after": {
+      "id": "3b630302-e3c7-49a0-95c0-ce7c87e77466",
+      "type": "wall",
+      "material": "glass",
+      "editable": true,
+      "properties": {
+        "color": "white"
+      }
+    }
+  },
+  "before": {
+    "id": "3b630302-e3c7-49a0-95c0-ce7c87e77466",
+    "type": "wall",
+    "material": "concrete",
+    "editable": true,
+    "properties": {
+      "color": "white"
+    }
+  },
+  "after": {
+    "id": "3b630302-e3c7-49a0-95c0-ce7c87e77466",
+    "type": "wall",
+    "material": "glass",
+    "editable": true,
+    "properties": {
+      "color": "white"
+    }
+  }
+}

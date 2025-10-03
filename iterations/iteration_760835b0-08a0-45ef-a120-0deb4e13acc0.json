@@ -1,0 +1,52 @@
+{
+  "iteration_id": "760835b0-08a0-45ef-a120-0deb4e13acc0",
+  "spec_id": "test_spec_001",
+  "instruction": "change floor to marble",
+  "object_id": "8dc20267-aa02-42c1-b46b-08329562d682",
+  "timestamp": "2025-10-03T17:43:23.222588",
+  "diff": {
+    "changed_fields": [
+      "material"
+    ],
+    "before": {
+      "id": "8dc20267-aa02-42c1-b46b-08329562d682",
+      "type": "floor",
+      "material": "wood",
+      "editable": true,
+      "properties": {
+        "color": "brown",
+        "finish": "matte"
+      }
+    },
+    "after": {
+      "id": "8dc20267-aa02-42c1-b46b-08329562d682",
+      "type": "floor",
+      "material": "marble",
+      "editable": true,
+      "properties": {
+        "color": "brown",
+        "finish": "matte"
+      }
+    }
+  },
+  "before": {
+    "id": "8dc20267-aa02-42c1-b46b-08329562d682",
+    "type": "floor",
+    "material": "wood",
+    "editable": true,
+    "properties": {
+      "color": "brown",
+      "finish": "matte"
+    }
+  },
+  "after": {
+    "id": "8dc20267-aa02-42c1-b46b-08329562d682",
+    "type": "floor",
+    "material": "marble",
+    "editable": true,
+    "properties": {
+      "color": "brown",
+      "finish": "matte"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "iteration_id": "5ee072bf-f7c9-4e9e-86af-2a40e61e3285",
+  "spec_id": "test_spec_001",
+  "instruction": "make window blue and glossy",
+  "object_id": "bda318ef-38b8-47ea-9fed-f27cef66bb52",
+  "timestamp": "2025-10-03T17:43:23.224946",
+  "diff": {
+    "changed_fields": [],
+    "before": {
+      "id": "bda318ef-38b8-47ea-9fed-f27cef66bb52",
+      "type": "window",
+      "material": "glass",
+      "editable": true,
+      "properties": {
+        "transparency": "clear",
+        "color": "blue",
+        "finish": "glossy"
+      }
+    },
+    "after": {
+      "id": "bda318ef-38b8-47ea-9fed-f27cef66bb52",
+      "type": "window",
+      "material": "glass",
+      "editable": true,
+      "properties": {
+        "transparency": "clear",
+        "color": "blue",
+        "finish": "glossy"
+      }
+    }
+  },
+  "before": {
+    "id": "bda318ef-38b8-47ea-9fed-f27cef66bb52",
+    "type": "window",
+    "material": "glass",
+    "editable": true,
+    "properties": {
+      "transparency": "clear",
+      "color": "blue",
+      "finish": "glossy"
+    }
+  },
+  "after": {
+    "id": "bda318ef-38b8-47ea-9fed-f27cef66bb52",
+    "type": "window",
+    "material": "glass",
+    "editable": true,
+    "properties": {
+      "transparency": "clear",
+      "color": "blue",
+      "finish": "glossy"
+    }
+  }
+}
