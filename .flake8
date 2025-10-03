@@ -1,0 +1,39 @@
+[flake8]
+max-line-length = 127
+ignore = 
+    E501,  # line too long
+    W293,  # blank line contains whitespace
+    W291,  # trailing whitespace
+    W292,  # no newline at end of file
+    E302,  # expected 2 blank lines
+    E305,  # expected 2 blank lines after class
+    E402,  # module level import not at top
+    F401,  # imported but unused
+    F841,  # local variable assigned but never used
+    C901,  # too complex
+    E722,  # do not use bare except
+    E128,  # continuation line under-indented
+    E129,  # visually indented line with same indent
+    E231,  # missing whitespace after comma
+    E225,  # missing whitespace around operator
+    E701,  # multiple statements on one line (colon)
+    E702,  # multiple statements on one line (semicolon)
+    E306,  # expected 1 blank line before nested definition
+    E301,  # expected 1 blank line
+    E303,  # too many blank lines
+    F811,  # redefinition of unused
+    F402,  # import shadowed by loop variable
+    E401,  # multiple imports on one line
+    E129   # visually indented line
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    .coverage,
+    htmlcov,
+    compliance-engine
