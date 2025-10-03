@@ -152,6 +152,11 @@ def custom_openapi():
                 if path == "/health":
                     # Health endpoint is public for monitoring
                     operation["security"] = []
+                elif path in ["/api/v1/auth/login", "/api/v1/auth/refresh"]:
+                    # Auth endpoints only need API key
+                    operation["security"] = [
+                        {"APIKeyHeader": []}
+                    ]
                 else:
                     # All other endpoints require both
                     operation["security"] = [
