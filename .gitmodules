@@ -1,0 +1,3 @@
+[submodule "compliance-engine"]
+	path = compliance-engine
+	url = https://github.com/Soham2704/multi-agent-compliance-system.git

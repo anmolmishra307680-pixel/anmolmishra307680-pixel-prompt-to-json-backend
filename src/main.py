@@ -25,28 +25,28 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 # Import agents and database
-from agents.main_agent import MainAgent
-from agents.evaluator_agent import EvaluatorAgent
-from agents.rl_agent import RLLoop
-from data.database import Database
-from agents.feedback_agent import FeedbackAgent
-from core.cache import cache
-from core.auth import create_access_token, get_current_user
-from core import error_handlers
-from core.lm_adapter import LocalLMAdapter
-from schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
-from services.preview_generator import generate_preview
-from core.nlp_parser import ObjectTargeter
-from services.spec_storage import spec_storage
-from services.compliance import compliance_proxy
-from services.geometry_storage import geometry_storage
-from auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
-from services.compute_router import compute_router
-from utils.system_monitoring import system_monitor, init_sentry
-from services.preview_manager import preview_manager
-from services.frontend_integration import frontend_integration
-from api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
-from api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
+from src.agents.main_agent import MainAgent
+from src.agents.evaluator_agent import EvaluatorAgent
+from src.agents.rl_agent import RLLoop
+from src.data.database import Database
+from src.agents.feedback_agent import FeedbackAgent
+from src.core.cache import cache
+from src.core.auth import create_access_token, get_current_user
+from src.core import error_handlers
+from src.core.lm_adapter import LocalLMAdapter
+from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
+# from src.services.preview_generator import generate_preview
+from src.core.nlp_parser import ObjectTargeter
+# from src.services.spec_storage import spec_storage
+# from src.services.compliance import compliance_proxy
+# from src.services.geometry_storage import geometry_storage
+from src.auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
+from src.services.compute_router import compute_router, router
+from src.utils.system_monitoring import system_monitor, init_sentry
+from src.services.preview_manager import preview_manager
+from src.services.frontend_integration import frontend_integration
+from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
+from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
 from fastapi.security import HTTPBearer
 
@@ -266,6 +266,11 @@ try:
     rl_agent = RLLoop()
     feedback_agent = FeedbackAgent()
     db = Database()
+    
+    # Lazy import services to avoid circular dependencies
+    from src.services.spec_storage import spec_storage
+    from src.services.compliance import proxy
+    
     print("[OK] All agents initialized successfully")
 except Exception as e:
     print(f"[WARN] Agent initialization warning: {e}")
@@ -1631,6 +1636,40 @@ async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: st
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Enhanced generate
+@app.post("/api/v1/generate")
+@limiter.limit("20/minute")
+async def generate_v2(request: Request, body: GenerateRequestV2, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
+    start=time.time()
+    routed=await router.route_inference(body.prompt,body.context,"generation_v2")
+    spec_data=routed["result"]
+    # build EnhancedDesignSpec...
+    # generate preview, store spec...
+    return GenerateResponseV2(spec_id="gen_123", spec_json=spec_data, processing_time=time.time()-start).model_dump()
+
+# Material switch
+@app.post("/api/v1/switch")
+@limiter.limit("20/minute")
+async def switch_material(request: Request, body: SwitchRequest, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
+    spec=spec_storage.get_spec(body.spec_id)
+    tgt=ObjectTargeter().parse_target(body.instruction,spec)
+    changes=ObjectTargeter().parse_material(body.instruction)
+    # apply changes, save iteration, update spec, preview
+    return SwitchResponse(spec_id=body.spec_id, iteration_id="iter_123", updated_spec_json=spec, changed={"object_id":tgt}).model_dump()
+
+# Compliance endpoints
+@app.post("/api/v1/compliance/run_case")
+@limiter.limit("20/minute")
+async def compliance_run_case(request: Request, data: dict, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
+    res=await proxy.run_case(data)
+    return {"success":True,"result":res}
+
+@app.post("/api/v1/compliance/feedback")
+@limiter.limit("20/minute")
+async def compliance_feedback(request: Request, data: dict, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
+    res=await proxy.send_feedback(data)
+    return {"success":True,"result":res}
 
 @app.post("/api/v1/evaluate")
 @limiter.limit("20/minute")

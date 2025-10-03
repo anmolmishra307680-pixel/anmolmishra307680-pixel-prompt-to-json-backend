@@ -62,7 +62,11 @@
 git clone <repository-url>
 cd prompt-to-json-backend
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+
+# Activate the virtual environment
+# Windows (PowerShell) - If you get an error, run this command first: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\Activate.ps1
+
 ```
 
 ### 2. Install Dependencies
@@ -94,32 +98,26 @@ PRODUCTION_MODE=true ./start.sh
 ## 📊 API Endpoints (17 Total) - ✅ ALL OPERATIONAL
 
 **Latest Validation**: September 27, 2024 - 100% Success Rate
-
-### 🔐 Maximum Security Authentication
-- **API Key**: `X-API-Key: bhiv-secret-key-2024` (required for ALL endpoints)
-- **JWT Tokens**: Bearer token authentication for enhanced security
-- **Rate Limiting**: 20 requests/minute for protected endpoints
-- **Zero Public Endpoints**: Maximum security - all endpoints require authentication
-
-#### Getting JWT Token (Requires API Key)
+ 
+### 🔐 Authentication Flow
+All protected endpoints require **Dual Authentication** (API Key + JWT Token). The `/health` endpoint is public for monitoring.
+ 
+#### 1. Get JWT Token (Requires API Key)
 ```bash
 # Get JWT token (API key required for this step)
 curl -X POST "http://localhost:8000/token" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: bhiv-secret-key-2024" \
   -d '{"username":"admin","password":"bhiv2024"}'
+```
 
-# Response: {"access_token":"eyJ...","token_type":"bearer"}
-
-# Use BOTH API key and token for all other endpoints
+#### 2. Call a Protected Endpoint
+```bash
 curl -X POST "http://localhost:8000/generate" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: bhiv-secret-key-2024" \
   -H "Authorization: Bearer <jwt-token>" \
   -d '{"prompt":"Modern office building"}'
-
-# Health endpoint is public (no authentication required)
-curl -X GET "http://localhost:8000/health"
 ```
 
 ### 🎯 Core AI Endpoints

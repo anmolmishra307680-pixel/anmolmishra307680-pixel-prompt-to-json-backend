@@ -1,33 +1,24 @@
-"""Compliance proxy for Soham's endpoints"""
-
-import httpx
-import os
-from typing import Dict, Any
+import os, httpx, sys, json, tempfile
+sys.path.append('compliance-engine')
 
 class ComplianceProxy:
     def __init__(self):
-        self.base_url = os.getenv("SOHAM_COMPLIANCE_URL", "http://localhost:8001")
-        self.timeout = 30.0
-    
-    async def run_case(self, case_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Proxy to Soham's /run_case endpoint"""
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/run_case",
-                json=case_data
-            )
-            response.raise_for_status()
-            return response.json()
-    
-    async def send_feedback(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Proxy to Soham's /feedback endpoint"""
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/feedback", 
-                json=feedback_data
-            )
-            response.raise_for_status()
-            return response.json()
+        self.url=os.getenv("SOHAM_COMPLIANCE_URL")
+    async def run_case(self,data):
+        try:
+            from main import initialize_system, process_case
+            vs,llm,ea,env,rl,geo=initialize_system()
+            # write temp JSON
+            tf=tempfile.NamedTemporaryFile(delete=False,suffix='.json')
+            json.dump(data,tf); tf.close()
+            res=process_case(tf.name,vs,llm,ea,env,rl,geo)
+            os.unlink(tf.name)
+            return res
+        except Exception as e:
+            return {"error": str(e), "status": "failed"}
+    async def send_feedback(self,data):
+        async with httpx.AsyncClient() as c:
+            r=await c.post(f"{self.url}/feedback",json=data)
+            return r.json()
 
-# Global instance
-compliance_proxy = ComplianceProxy()
+proxy=ComplianceProxy()

@@ -53,10 +53,34 @@ curl -X POST "http://localhost:8000/generate" \
 
 ### 1. Environment Setup
 ```bash
-git clone <repository-url>
+git clone https://github.com/anmolmishra307680-pixel/prompt-to-json-backend.git
 cd prompt-to-json-backend
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+
+# Activate the virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+
+# On Windows (Recommended - works without policy issues):
+.venv\Scripts\activate.bat
+
+# Alternative Windows methods:
+# PowerShell (requires execution policy bypass):
+# Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+# .venv\Scripts\Activate.ps1
+
+# Direct Python execution (no activation needed):
+# .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# .\.venv\Scripts\python.exe -m src.main
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
