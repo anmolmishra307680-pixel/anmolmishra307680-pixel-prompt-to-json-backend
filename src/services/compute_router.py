@@ -5,9 +5,16 @@ class ComputeRouter:
     def __init__(self):
         try:
             import torch
-            self.local_gpu = torch.cuda.is_available() and '3060' in torch.cuda.get_device_name(0)
+            if torch.cuda.is_available():
+                gpu_name = torch.cuda.get_device_name(0)
+                self.local_gpu = '3060' in gpu_name or 'RTX' in gpu_name
+                print(f"[INFO] GPU detected: {gpu_name}, RTX-3060 compatible: {self.local_gpu}")
+            else:
+                self.local_gpu = False
+                print("[INFO] No CUDA GPU available")
         except ImportError:
             self.local_gpu = False
+            print("[INFO] PyTorch not available, no GPU support")
         self.yotta_key = os.getenv("YOTTA_API_KEY")
         self.yotta_url = os.getenv("YOTTA_ENDPOINT")
 

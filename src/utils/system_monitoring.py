@@ -68,14 +68,22 @@ class SystemMonitor:
         except Exception:
             db_status = "degraded"
         
+        # Get actual file counts for persistent metrics
+        actual_specs = self._count_files("spec_outputs", "*.json")
+        actual_reports = self._count_files("reports", "evaluation_report_*.json")
+        
+        # Use max of in-memory counters and actual file counts
+        specs_total = max(self.specs_generated, actual_specs)
+        evals_total = max(self.evaluations_completed, actual_reports)
+        
         return {
             "status": "healthy" if db_status == "healthy" else "degraded",
             "uptime_seconds": round(uptime, 2),
             "requests_total": self.request_count,
             "errors_total": self.error_count,
             "jobs_total": self.job_count,
-            "specs_generated": self.specs_generated,
-            "evaluations_completed": self.evaluations_completed,
+            "specs_generated": specs_total,
+            "evaluations_completed": evals_total,
             "rl_iterations_total": self.rl_iterations_total,
             "agent_calls": self.agent_calls,
             "compute_jobs": job_stats.get("total_jobs", 0),
@@ -83,6 +91,15 @@ class SystemMonitor:
             "database_status": db_status,
             "timestamp": datetime.now().isoformat()
         }
+    
+    def _count_files(self, directory: str, pattern: str) -> int:
+        """Count files matching pattern in directory"""
+        try:
+            import glob
+            files = glob.glob(f"{directory}/{pattern}")
+            return len(files)
+        except Exception:
+            return 0
     
     def get_prometheus_metrics(self) -> str:
         """Get Prometheus format metrics"""
