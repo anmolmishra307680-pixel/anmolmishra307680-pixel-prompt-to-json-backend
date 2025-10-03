@@ -42,10 +42,9 @@ def test_preview_manager():
         print(f"   Valid signature: {is_valid}")
         print(f"   Expired check: {not is_expired}")
         
-        return True
     except Exception as e:
         print(f"[FAIL] Preview Manager failed: {e}")
-        return False
+        assert False, f"Preview Manager failed: {e}"
 
 async def test_preview_generation():
     """Test preview generation with signed URLs"""
@@ -82,10 +81,9 @@ async def test_preview_generation():
         print(f"   Cached: {cached_url == preview_url}")
         print(f"   Refreshed: {refreshed_url != preview_url}")
         
-        return True
     except Exception as e:
         print(f"[FAIL] Preview Generation failed: {e}")
-        return False
+        assert False, f"Preview Generation failed: {e}"
 
 def test_frontend_integration():
     """Test frontend integration utilities"""
@@ -121,10 +119,9 @@ def test_frontend_integration():
         print(f"   Flows logged: {summary['total_flows']}")
         print(f"   Flow types: {list(summary['flow_types'].keys())}")
         
-        return True
     except Exception as e:
         print(f"[FAIL] Frontend Integration failed: {e}")
-        return False
+        assert False, f"Frontend Integration failed: {e}"
 
 def test_three_js_conversion():
     """Test Three.js data conversion"""
@@ -179,10 +176,9 @@ def test_three_js_conversion():
         print(f"   Editable objects: {len(metadata['editable_objects'])}")
         print(f"   Floor geometry: {floor_obj['geometry']['type']}")
         
-        return True
     except Exception as e:
         print(f"[FAIL] Three.js Conversion failed: {e}")
-        return False
+        assert False, f"Three.js Conversion failed: {e}"
 
 async def main():
     """Run all tests"""

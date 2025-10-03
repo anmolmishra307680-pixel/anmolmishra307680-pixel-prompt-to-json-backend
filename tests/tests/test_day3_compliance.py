@@ -21,11 +21,9 @@ def test_compliance_proxy():
         print("[OK] Compliance Proxy initialized")
         print(f"   Base URL: {proxy.base_url}")
         print(f"   Timeout: {proxy.timeout}s")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Compliance Proxy failed: {e}")
-        return False
+        assert False, f"Compliance Proxy failed: {e}"
 
 def test_geometry_storage():
     """Test geometry storage functionality"""
@@ -55,11 +53,9 @@ def test_geometry_storage():
         print("[OK] Geometry Storage working")
         print(f"   Stored: {case_id} -> {url}")
         print(f"   Mapped: {case_id} -> {project_id}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Geometry Storage failed: {e}")
-        return False
+        assert False, f"Geometry Storage failed: {e}"
 
 def test_database_compliance():
     """Test database compliance methods"""
@@ -96,11 +92,9 @@ def test_database_compliance():
         print(f"   Case saved: {saved_id}")
         print(f"   Feedback saved: {feedback_id}")
         print(f"   Pipeline saved: {saved_pipeline}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Database Compliance failed: {e}")
-        return False
+        assert False, f"Database Compliance failed: {e}"
 
 def test_mock_pipeline():
     """Test mock pipeline without external services"""
@@ -148,13 +142,11 @@ def test_mock_pipeline():
         print(f"   Spec type: {spec_data.get('design_type')}")
         print(f"   Compliance score: {compliance_result['score']}")
         print(f"   Geometry URL: {geometry_url}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Mock Pipeline failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False, f"Mock Pipeline failed: {e}"
 
 def main():
     """Run all tests"""

@@ -38,10 +38,9 @@ def test_object_parser():
         assert material_changes2['properties']['color'] == 'orange', f"Expected orange color"
         
         print("[OK] ObjectTargeter working")
-        return True
     except Exception as e:
         print(f"[FAIL] ObjectTargeter failed: {e}")
-        return False
+        assert False, f"ObjectTargeter failed: {e}"
 
 def test_spec_storage():
     """Test spec storage functionality"""
@@ -62,10 +61,9 @@ def test_spec_storage():
         assert retrieved['spec_id'] == 'test-123', "Wrong spec ID"
         
         print("[OK] Spec Storage working")
-        return True
     except Exception as e:
         print(f"[FAIL] Spec Storage failed: {e}")
-        return False
+        assert False, f"Spec Storage failed: {e}"
 
 def test_switch_logic():
     """Test the switch logic"""
@@ -108,10 +106,9 @@ def test_switch_logic():
         assert changes2['properties']['color'] == 'orange', f"Wrong color: {changes2}"
         
         print("[OK] Switch Logic working")
-        return True
     except Exception as e:
         print(f"[FAIL] Switch Logic failed: {e}")
-        return False
+        assert False, f"Switch Logic failed: {e}"
 
 def main():
     """Run all tests"""

@@ -18,11 +18,9 @@ def test_lm_adapter():
         print(f"   Design Type: {result.get('design_type')}")
         print(f"   Features: {result.get('features')}")
         print(f"   Materials: {len(result.get('materials', []))} materials")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] LM Adapter failed: {e}")
-        return False
+        assert False, f"LM Adapter failed: {e}"
 
 def test_v2_schema():
     """Test v2 Schema functionality"""
@@ -58,11 +56,9 @@ def test_v2_schema():
         print(f"   Spec ID: {spec.spec_id}")
         print(f"   Object ID: {spec.objects[0].id}")
         print(f"   Editable: {spec.objects[0].editable}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] v2 Schema failed: {e}")
-        return False
+        assert False, f"v2 Schema failed: {e}"
 
 def test_preview_generator():
     """Test preview generator"""
@@ -88,11 +84,9 @@ def test_preview_generator():
         print(f"[OK] Preview Generator working")
         print(f"   Preview URL: {preview_url}")
         print(f"   Placeholder length: {len(placeholder)} chars")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Preview Generator failed: {e}")
-        return False
+        assert False, f"Preview Generator failed: {e}"
 
 def test_integration():
     """Test full integration"""
@@ -143,11 +137,9 @@ def test_integration():
         print(f"   Generated {len(enhanced_spec.objects)} objects")
         print(f"   Scene: {enhanced_spec.scene.name}")
         print(f"   Metadata keys: {list(enhanced_spec.metadata.keys())}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Full Integration failed: {e}")
-        return False
+        assert False, f"Full Integration failed: {e}"
 
 def main():
     """Run all tests"""
@@ -165,8 +157,11 @@ def main():
     total = len(tests)
     
     for test in tests:
-        if test():
+        try:
+            test()
             passed += 1
+        except AssertionError:
+            pass
     
     print("\n" + "=" * 60)
     print(f"Test Results: {passed}/{total} tests passed")

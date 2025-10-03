@@ -35,11 +35,9 @@ def test_jwt_auth():
         print(f"   Access token created: {len(tokens.access_token)} chars")
         print(f"   Refresh token created: {len(tokens.refresh_token)} chars")
         print(f"   Token expires in: {tokens.expires_in} seconds")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] JWT Authentication failed: {e}")
-        return False
+        assert False, f"JWT Authentication failed: {e}"
 
 def test_compute_router():
     """Test compute routing system"""
@@ -69,11 +67,9 @@ def test_compute_router():
         print(f"   Simple complexity: {simple_complexity}")
         print(f"   Complex complexity: {complex_complexity}")
         print(f"   Job stats: {stats}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Compute Router failed: {e}")
-        return False
+        assert False, f"Compute Router failed: {e}"
 
 async def test_compute_routing():
     """Test actual compute routing"""
@@ -131,11 +127,9 @@ def test_monitoring():
         print(f"   Requests: {system_monitor.request_count}")
         print(f"   Errors: {system_monitor.error_count}")
         print(f"   Status: {health_metrics['status']}")
-        
-        return True
     except Exception as e:
         print(f"[FAIL] Monitoring failed: {e}")
-        return False
+        assert False, f"Monitoring failed: {e}"
 
 async def main():
     """Run all tests"""
