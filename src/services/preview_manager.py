@@ -1,20 +1,17 @@
-"""Preview management with signed URLs and bucket storage"""
+"""Enhanced preview management with BHIV bucket storage and Three.js compatibility"""
 
 import os
 import time
-import hashlib
-import hmac
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from pathlib import Path
 import json
-import httpx
+from src.storage.bucket_storage import bucket_storage
+from src.services.preview_generator import preview_generator
 
 class PreviewManager:
+    """Enhanced preview manager with bucket storage integration"""
+    
     def __init__(self):
-        self.bucket_url = os.getenv("BHIV_BUCKET_URL", "https://storage.bhiv.com")
-        self.signing_key = os.getenv("PREVIEW_SIGNING_KEY", "dev-signing-key")
-        self.preview_expiry = 3600  # 1 hour
         self.preview_cache = {}
         self._load_cache()
     
@@ -37,24 +34,9 @@ class PreviewManager:
         except Exception:
             pass
     
-    def _generate_signature(self, spec_id: str, expires: int) -> str:
-        """Generate HMAC signature for URL"""
-        message = f"{spec_id}:{expires}"
-        signature = hmac.new(
-            self.signing_key.encode(),
-            message.encode(),
-            hashlib.sha256
-        ).hexdigest()
-        return signature
-    
-    def _is_signature_valid(self, spec_id: str, expires: int, signature: str) -> bool:
-        """Validate HMAC signature"""
-        expected = self._generate_signature(spec_id, expires)
-        return hmac.compare_digest(expected, signature)
-    
     async def generate_preview(self, spec_data: Dict[str, Any]) -> str:
-        """Generate signed preview URL"""
-        spec_id = spec_data.get('spec_id', 'unknown')
+        """Generate preview with bucket storage and signed URL"""
+        spec_id = spec_data.get('spec_id', f"preview_{int(time.time())}")
         
         # Check cache first
         if spec_id in self.preview_cache:
@@ -62,57 +44,22 @@ class PreviewManager:
             if cached['expires'] > time.time():
                 return cached['signed_url']
         
-        # Generate new preview
-        expires = int(time.time() + self.preview_expiry)
-        signature = self._generate_signature(spec_id, expires)
-        
-        # Create signed URL
-        signed_url = f"{self.bucket_url}/preview/{spec_id}.png?expires={expires}&signature={signature}"
-        
-        # Upload to bucket (mock implementation)
-        await self._upload_preview(spec_id, spec_data)
+        # Generate preview using enhanced preview generator
+        signed_url = await preview_generator.generate_preview(spec_data)
         
         # Cache the result
         self.preview_cache[spec_id] = {
             'signed_url': signed_url,
-            'expires': expires,
+            'expires': time.time() + 86400,  # 24 hours
             'created_at': time.time()
         }
         self._save_cache()
         
         return signed_url
     
-    async def _upload_preview(self, spec_id: str, spec_data: Dict[str, Any]):
-        """Upload preview to BHIV bucket"""
-        try:
-            # Mock preview generation - would use actual 3D rendering
-            preview_data = self._generate_mock_preview(spec_data)
-            
-            # Upload to bucket (mock implementation)
-            upload_url = f"{self.bucket_url}/upload/preview/{spec_id}.png"
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.put(
-                    upload_url,
-                    content=preview_data,
-                    headers={"Content-Type": "image/png"}
-                )
-                response.raise_for_status()
-                
-        except Exception as e:
-            print(f"Preview upload failed: {e}")
-            # Continue with signed URL even if upload fails
-    
-    def _generate_mock_preview(self, spec_data: Dict[str, Any]) -> bytes:
-        """Generate mock preview data"""
-        # Mock PNG data - would be actual 3D render
-        return b"mock_png_data_for_preview"
-    
     def verify_preview_url(self, spec_id: str, expires: int, signature: str) -> bool:
-        """Verify signed preview URL"""
-        if expires < time.time():
-            return False
-        return self._is_signature_valid(spec_id, expires, signature)
+        """Verify signed preview URL using bucket storage"""
+        return bucket_storage.verify_signed_url(spec_id, expires, signature)
     
     async def refresh_preview(self, spec_id: str, spec_data: Dict[str, Any]) -> str:
         """Force refresh preview"""
@@ -123,7 +70,7 @@ class PreviewManager:
         # Generate new preview
         return await self.generate_preview(spec_data)
     
-    def cleanup_stale_previews(self):
+    def cleanup_stale_previews(self) -> int:
         """Remove expired previews from cache"""
         current_time = time.time()
         stale_keys = [
@@ -138,6 +85,14 @@ class PreviewManager:
             self._save_cache()
         
         return len(stale_keys)
+    
+    def get_threejs_data(self, spec_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get Three.js formatted data for viewer"""
+        return preview_generator.format_for_threejs(spec_data)
+    
+    def generate_viewer_html(self, spec_data: Dict[str, Any]) -> str:
+        """Generate HTML for Three.js viewer"""
+        return preview_generator.generate_viewer_html(spec_data)
 
 # Global instance
 preview_manager = PreviewManager()

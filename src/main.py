@@ -1591,12 +1591,25 @@ async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depen
     """Get Three.js formatted data for spec"""
     try:
         # Get spec data
-        spec_data = spec_storage.get_spec(spec_id)
+        try:
+            from src.services.spec_storage import spec_storage
+            spec_data = spec_storage.get_spec(spec_id)
+        except ImportError:
+            # Fallback storage
+            import json
+            from pathlib import Path
+            storage_file = Path("spec_storage") / f"{spec_id}.json"
+            if storage_file.exists():
+                with open(storage_file, 'r') as f:
+                    spec_data = json.load(f)
+            else:
+                spec_data = None
+        
         if not spec_data:
             raise HTTPException(status_code=404, detail="Spec not found")
         
-        # Convert to Three.js format
-        three_js_data = frontend_integration.prepare_three_js_data(spec_data)
+        # Convert to Three.js format using enhanced preview manager
+        three_js_data = preview_manager.get_threejs_data(spec_data)
         
         return {
             "success": True,
@@ -1604,6 +1617,64 @@ async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depen
             "three_js_data": three_js_data,
             "message": "Three.js data prepared"
         }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/preview/viewer/{spec_id}", tags=["🖼️ Preview Management"])
+@limiter.limit("20/minute")
+async def get_preview_viewer(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get HTML viewer for spec preview"""
+    try:
+        # Get spec data
+        try:
+            from src.services.spec_storage import spec_storage
+            spec_data = spec_storage.get_spec(spec_id)
+        except ImportError:
+            # Fallback storage
+            import json
+            from pathlib import Path
+            storage_file = Path("spec_storage") / f"{spec_id}.json"
+            if storage_file.exists():
+                with open(storage_file, 'r') as f:
+                    spec_data = json.load(f)
+            else:
+                spec_data = None
+        
+        if not spec_data:
+            raise HTTPException(status_code=404, detail="Spec not found")
+        
+        # Generate HTML viewer
+        viewer_html = preview_manager.generate_viewer_html(spec_data)
+        
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(content=viewer_html)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/preview/local/{object_key}", tags=["🖼️ Preview Management"])
+async def serve_local_preview(request: Request, object_key: str, expires: int, signature: str):
+    """Serve local preview files with signature verification"""
+    try:
+        from src.storage.bucket_storage import bucket_storage
+        
+        # Verify signature
+        if not bucket_storage.verify_signed_url(object_key, expires, signature):
+            raise HTTPException(status_code=401, detail="Invalid or expired signature")
+        
+        # Serve file
+        from fastapi.responses import FileResponse
+        file_path = Path("preview_storage") / object_key
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Preview not found")
+        
+        return FileResponse(file_path, media_type="image/jpeg")
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -1934,6 +2005,56 @@ async def get_sentry_status(request: Request, api_key: str = Depends(verify_api_
             "dsn_configured": bool(os.getenv("SENTRY_DSN")),
             "test_message_sent": True
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/demo/end-to-end", tags=["🎆 Demo Flow"])
+@limiter.limit("10/minute")
+async def run_end_to_end_demo(request: Request, demo_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """End-to-end demo flow: Generate → Preview → Three.js"""
+    try:
+        prompt = demo_data.get('prompt', 'Modern office building with glass facade')
+        
+        # Step 1: Generate specification
+        spec = prompt_agent.run(prompt)
+        spec_data = spec.model_dump()
+        
+        # Step 2: Generate preview with signed URL
+        preview_url = await preview_manager.generate_preview(spec_data)
+        
+        # Step 3: Get Three.js data
+        threejs_data = preview_manager.get_threejs_data(spec_data)
+        
+        # Step 4: Generate viewer URL
+        viewer_url = f"/api/v1/preview/viewer/{spec_data.get('spec_id', 'demo')}"
+        
+        return {
+            "success": True,
+            "demo_flow": {
+                "step_1_generate": {
+                    "spec_id": spec_data.get('spec_id'),
+                    "design_type": spec_data.get('design_type'),
+                    "objects_count": len(spec_data.get('objects', []))
+                },
+                "step_2_preview": {
+                    "preview_url": preview_url,
+                    "signed": True,
+                    "expires_in": "24 hours"
+                },
+                "step_3_threejs": {
+                    "objects_count": len(threejs_data.get('objects', [])),
+                    "materials_count": len(set(obj.get('material', {}).get('type', 'standard') for obj in threejs_data.get('objects', []))),
+                    "viewer_ready": True
+                },
+                "step_4_viewer": {
+                    "viewer_url": viewer_url,
+                    "interactive": True,
+                    "controls": ["orbit", "zoom", "pan"]
+                }
+            },
+            "message": "End-to-end demo completed successfully"
+        }
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
