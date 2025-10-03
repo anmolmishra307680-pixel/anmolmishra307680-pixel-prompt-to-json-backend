@@ -471,6 +471,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
             print(f"HIDG logging error: {log_error}")
 
         return {
+            "spec_id": spec.spec_id if hasattr(spec, 'spec_id') else f"spec_{int(time.time())}",
             "spec": spec.model_dump(),
             "success": True,
             "message": "Specification generated successfully"
@@ -499,10 +500,21 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
     try:
         # Route inference through compute router
         system_monitor.increment_jobs()
-        routed_result = await compute_router.route_inference(
-            body.prompt, body.context, "generation_v2"
-        )
-        spec_data = routed_result["result"]
+        try:
+            routed_result = await compute_router.route_inference(
+                body.prompt, body.context, "generation_v2"
+            )
+            if isinstance(routed_result.get("result"), dict):
+                spec_data = routed_result["result"]
+            else:
+                # If result is not dict, use direct generation
+                spec = prompt_agent.run(body.prompt)
+                spec_data = spec.model_dump()
+        except Exception as e:
+            print(f"[WARN] Compute router failed: {e}, using direct generation")
+            # Fallback to direct generation
+            spec = prompt_agent.run(body.prompt)
+            spec_data = spec.model_dump()
         
         # Create enhanced design objects
         from src.schemas.v2_schema import DesignObject, SceneInfo, Dimensions3D, Position3D
@@ -549,7 +561,17 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
         processing_time = time.time() - start_time
         
         # Store spec for later editing
-        spec_storage.store_spec(enhanced_spec.spec_id, enhanced_spec.model_dump())
+        try:
+            from src.services.spec_storage import spec_storage
+            spec_storage.store_spec(enhanced_spec.spec_id, enhanced_spec.model_dump())
+        except ImportError:
+            # Fallback storage
+            import json
+            from pathlib import Path
+            storage_dir = Path("spec_storage")
+            storage_dir.mkdir(exist_ok=True)
+            with open(storage_dir / f"{enhanced_spec.spec_id}.json", 'w') as f:
+                json.dump(enhanced_spec.model_dump(), f, indent=2)
         
         response = GenerateResponseV2(
             spec_id=enhanced_spec.spec_id,
@@ -584,7 +606,20 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
     """Switch object materials/properties based on natural language instruction"""
     try:
         # Get existing spec
-        spec_data = spec_storage.get_spec(body.spec_id)
+        try:
+            from src.services.spec_storage import spec_storage
+            spec_data = spec_storage.get_spec(body.spec_id)
+        except ImportError:
+            # Fallback storage
+            import json
+            from pathlib import Path
+            storage_file = Path("spec_storage") / f"{body.spec_id}.json"
+            if storage_file.exists():
+                with open(storage_file, 'r') as f:
+                    spec_data = json.load(f)
+            else:
+                spec_data = None
+        
         if not spec_data:
             raise HTTPException(status_code=404, detail="Spec not found")
         
