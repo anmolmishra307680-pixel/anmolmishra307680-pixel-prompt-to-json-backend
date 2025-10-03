@@ -18,7 +18,6 @@ import uvicorn
 from datetime import datetime, timezone
 import os
 import secrets
-import logging
 import time
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -105,7 +104,6 @@ app = FastAPI(
 )
 
 # Register structured exception handlers
-from fastapi import HTTPException
 from pydantic import ValidationError
 
 app.add_exception_handler(ValidationError, error_handlers.validation_exception_handler)
@@ -269,15 +267,11 @@ try:
     
     # Lazy import services to avoid circular dependencies
     from src.services.spec_storage import spec_storage
-    from src.services.compliance import proxy
     
     print("[OK] All agents initialized successfully")
 except Exception as e:
     print(f"[WARN] Agent initialization warning: {e}")
     # Create minimal fallback objects
-    class FallbackAgent:
-        def run(self, *args, **kwargs):
-            return {"error": "Agent not available"}
 
     prompt_agent = FallbackAgent()
     evaluator_agent = FallbackAgent()
@@ -605,7 +599,6 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
             raise HTTPException(status_code=404, detail="Spec not found")
         
         # Parse target object and material change
-        from src.core.nlp_parser import ObjectTargeter
         targeter = ObjectTargeter()
         target_object_id = targeter.parse_target(body.instruction, spec_data)
         material_changes = targeter.parse_material(body.instruction)
@@ -701,6 +694,10 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
             case_data['case_id'] = str(uuid.uuid4())
         
         # Call Soham's compliance service
+        try:
+            from src.services.compliance import proxy as compliance_proxy
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Compliance service not available")
         result = await compliance_proxy.run_case(case_data)
         
         # Store geometry if provided
@@ -709,9 +706,13 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
         
         if 'geometry_data' in result:
             # Mock geometry file storage
-            geometry_url = geometry_storage.store_geometry(
-                case_id, project_id, b"mock_geometry_data", "stl"
-            )
+            try:
+                from src.services.geometry_storage import geometry_storage
+                geometry_url = geometry_storage.store_geometry(
+                    case_id, project_id, b"mock_geometry_data", "stl"
+                )
+            except ImportError:
+                geometry_url = f"/geometry/{case_id}.stl"
             result['geometry_url'] = geometry_url
         
         # Save to database
@@ -735,6 +736,10 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
 async def compliance_feedback(request: Request, feedback_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Proxy to Soham's /feedback endpoint"""
     try:
+        try:
+            from src.services.compliance import proxy as compliance_proxy
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Compliance service not available")
         result = await compliance_proxy.send_feedback(feedback_data)
         
         # Save feedback to database
@@ -795,8 +800,8 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
         else:
             # Generate new spec from prompt
             prompt = pipeline_data.get('prompt', 'Default building')
-            from src.core.lm_adapter import LocalLMAdapter
-            adapter = LocalLMAdapter()
+            # Use existing prompt agent for spec generation
+            adapter = prompt_agent
             spec_data = adapter.run(prompt)
         
         # Step 2: Run compliance check
@@ -807,15 +812,23 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
             'compliance_rules': pipeline_data.get('compliance_rules', [])
         }
         
+        try:
+            from src.services.compliance import proxy as compliance_proxy
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Compliance service not available")
         compliance_result = await compliance_proxy.run_case(case_data)
         
         # Step 3: Store geometry
-        geometry_url = geometry_storage.store_geometry(
-            pipeline_id, 
-            case_data['project_id'],
-            b"mock_geometry_data",
-            "stl"
-        )
+        try:
+            from src.services.geometry_storage import geometry_storage
+            geometry_url = geometry_storage.store_geometry(
+                pipeline_id, 
+                case_data['project_id'],
+                b"mock_geometry_data",
+                "stl"
+            )
+        except ImportError:
+            geometry_url = f"/geometry/{pipeline_id}.stl"
         
         # Step 4: Save pipeline result
         pipeline_result = {
@@ -1008,8 +1021,7 @@ async def get_report(request: Request, report_id: str, api_key: str = Depends(ve
             "report": report
         }
     except Exception as e:
-        import logging
-        logging.error(f"Failed to retrieve report {report_id}: {e}")
+        print(f"Failed to retrieve report {report_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve report")
 
 @app.post("/log-values")
@@ -1066,8 +1078,7 @@ async def log_values(request: Request, log_request: LogValuesRequest, api_key: s
             print(f"Failed to write values log: {e}")
             raise HTTPException(status_code=500, detail="Failed to save values log")
 
-        import logging
-        logging.info(f"Values logged to DB and file: {values_file}")
+        print(f"Values logged to DB and file: {values_file}")
 
         return {
             "success": True,
@@ -1136,8 +1147,7 @@ async def get_iteration_logs(request: Request, session_id: str, api_key: str = D
             "iterations": logs
         }
     except Exception as e:
-        import logging
-        logging.error(f"Failed to retrieve iteration logs for session {session_id}: {e}")
+        print(f"Failed to retrieve iteration logs for session {session_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve iteration logs")
 
 @app.get("/cli-tools")
@@ -1191,8 +1201,7 @@ async def run_system_test(request: Request, api_key: str = Depends(verify_api_ke
             "message": "All core tests passed"
         }
     except Exception as e:
-        import logging
-        logging.error(f"System test failed: {e}")
+        print(f"System test failed: {e}")
         raise HTTPException(status_code=500, detail=f"System test failed: {str(e)}")
 
 @app.post("/advanced-rl")
@@ -1215,8 +1224,7 @@ async def advanced_rl_training(request: Request, rl_request: IterateRequest, api
             "message": "Advanced RL training completed"
         }
     except Exception as e:
-        import logging
-        logging.error(f"Advanced RL training failed: {e}")
+        print(f"Advanced RL training failed: {e}")
         raise HTTPException(status_code=500, detail=f"Advanced RL training failed: {str(e)}")
 
 @app.post("/admin/prune-logs")
@@ -1235,8 +1243,7 @@ async def prune_logs(request: Request, retention_days: int = 30, api_key: str = 
             "message": f"Log pruning completed - {results['total_pruned']} entries removed"
         }
     except Exception as e:
-        import logging
-        logging.error(f"Log pruning failed: {e}")
+        print(f"Log pruning failed: {e}")
         raise HTTPException(status_code=500, detail=f"Log pruning failed: {str(e)}")
 
 @app.post("/coordinated-improvement")
@@ -1285,8 +1292,7 @@ async def get_agent_status(request: Request, api_key: str = Depends(verify_api_k
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
-        import logging
-        logging.error(f"Failed to get agent status: {e}")
+        print(f"Failed to get agent status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get agent status")
 
 @app.get("/cache-stats")
@@ -1301,8 +1307,7 @@ async def get_cache_stats(request: Request, api_key: str = Depends(verify_api_ke
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
-        import logging
-        logging.error(f"Failed to get cache stats: {e}")
+        print(f"Failed to get cache stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get cache stats")
 
 @app.get("/metrics")
@@ -1380,8 +1385,7 @@ async def get_system_overview(request: Request, api_key: str = Depends(verify_ap
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
-        import logging
-        logging.error(f"Failed to get system overview: {e}")
+        print(f"Failed to get system overview: {e}")
         raise HTTPException(status_code=500, detail="Failed to get system overview")
 
 @app.post("/api/v1/ui/session")
@@ -1571,7 +1575,6 @@ async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, a
         }
         
         # Apply mobile switch logic
-        from src.core.nlp_parser import ObjectTargeter
         targeter = ObjectTargeter()
         
         target_id = targeter.parse_target(mobile_request.instruction, spec_data)
@@ -1637,39 +1640,7 @@ async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: st
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Enhanced generate
-@app.post("/api/v1/generate")
-@limiter.limit("20/minute")
-async def generate_v2(request: Request, body: GenerateRequestV2, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
-    start=time.time()
-    routed=await router.route_inference(body.prompt,body.context,"generation_v2")
-    spec_data=routed["result"]
-    # build EnhancedDesignSpec...
-    # generate preview, store spec...
-    return GenerateResponseV2(spec_id="gen_123", spec_json=spec_data, processing_time=time.time()-start).model_dump()
 
-# Material switch
-@app.post("/api/v1/switch")
-@limiter.limit("20/minute")
-async def switch_material(request: Request, body: SwitchRequest, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
-    spec=spec_storage.get_spec(body.spec_id)
-    tgt=ObjectTargeter().parse_target(body.instruction,spec)
-    changes=ObjectTargeter().parse_material(body.instruction)
-    # apply changes, save iteration, update spec, preview
-    return SwitchResponse(spec_id=body.spec_id, iteration_id="iter_123", updated_spec_json=spec, changed={"object_id":tgt}).model_dump()
-
-# Compliance endpoints
-@app.post("/api/v1/compliance/run_case")
-@limiter.limit("20/minute")
-async def compliance_run_case(request: Request, data: dict, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
-    res=await proxy.run_case(data)
-    return {"success":True,"result":res}
-
-@app.post("/api/v1/compliance/feedback")
-@limiter.limit("20/minute")
-async def compliance_feedback(request: Request, data: dict, api_key=Depends(verify_api_key), user=Depends(get_current_user)):
-    res=await proxy.send_feedback(data)
-    return {"success":True,"result":res}
 
 @app.post("/api/v1/evaluate")
 @limiter.limit("20/minute")
