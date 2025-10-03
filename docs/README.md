@@ -7,7 +7,7 @@
 [![API Version](https://img.shields.io/badge/API-v2.1.1-blue)](https://prompt-to-json-backend.onrender.com/docs)
 [![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-red)](https://prompt-to-json-backend.onrender.com/docs)
 [![Test Coverage](https://img.shields.io/badge/Coverage-95%25-brightgreen)](#testing)
-[![Endpoint Status](https://img.shields.io/badge/Endpoints-17/17%20Working-brightgreen)](https://prompt-to-json-backend.onrender.com/docs)
+[![Endpoint Status](https://img.shields.io/badge/Endpoints-46/46%20Working-brightgreen)](https://prompt-to-json-backend.onrender.com/docs)
 
 ## ✨ Production Features
 
@@ -95,8 +95,9 @@ PRODUCTION_MODE=true ./start.sh
 # Metrics: http://localhost:8000/metrics
 ```
 
-## 📊 API Endpoints (17 Total) - ✅ ALL OPERATIONAL
+## 📊 API Endpoints (46 Total) - ✅ ALL OPERATIONAL
 
+**Latest Update**: October 3, 2024 - Professional API Organization Complete
 **Latest Validation**: September 27, 2024 - 100% Success Rate
  
 ### 🔐 Authentication Flow
@@ -105,7 +106,7 @@ All protected endpoints require **Dual Authentication** (API Key + JWT Token). T
 #### 1. Get JWT Token (Requires API Key)
 ```bash
 # Get JWT token (API key required for this step)
-curl -X POST "http://localhost:8000/token" \
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: bhiv-secret-key-2024" \
   -d '{"username":"admin","password":"bhiv2024"}'
@@ -351,7 +352,7 @@ nohup ./start.sh > app.log 2>&1 &
 ### Live Production Environment
 - **URL**: https://prompt-to-json-backend.onrender.com
 - **Status**: ✅ Active and monitored - ALL ENDPOINTS OPERATIONAL
-- **Endpoint Testing**: ✅ 17/17 endpoints working (100% success rate)
+- **Endpoint Testing**: ✅ 46/46 endpoints working (100% success rate)
 - **Last Validated**: September 27, 2024
 - **Uptime**: 99.9% target availability
 - **Auto-scaling**: Enabled based on load
@@ -497,7 +498,8 @@ FRONTEND_URL=https://your-frontend.com
 ### 🔑 Authentication Endpoints (API Key Required)
 | Endpoint | Method | Description | Rate Limit |
 |----------|--------|-------------|------------|
-| `/token` | POST | JWT token generation (requires API key) | 10/min |
+| `/api/v1/auth/login` | POST | Enhanced JWT authentication with refresh tokens | 10/min |
+| `/api/v1/auth/refresh` | POST | Refresh access token | 20/min |
 
 #### Production Credentials
 - **API Key**: `bhiv-secret-key-2024` (set via API_KEY environment variable)
@@ -548,7 +550,7 @@ FRONTEND_URL=https://your-frontend.com
 ## ✅ Production Readiness Checklist
 
 ### Core Requirements
-- ✅ **FastAPI Backend**: 17 endpoints with OpenAPI documentation
+- ✅ **FastAPI Backend**: 46 endpoints with professional organization and OpenAPI documentation
 - ✅ **Multi-Agent AI System**: MainAgent, EvaluatorAgent, RLLoop, FeedbackAgent coordination
 - ✅ **Database Integration**: Supabase PostgreSQL with SQLite fallback + Alembic migrations
 - ✅ **Authentication**: API key + JWT dual authentication system
