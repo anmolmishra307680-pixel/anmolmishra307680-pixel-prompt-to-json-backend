@@ -453,6 +453,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
     try:
         # Generate spec directly using MainAgent
         system_monitor.increment_jobs()
+        system_monitor.increment_specs()
         spec = prompt_agent.run(generate_request.prompt)
 
         # Track business metrics
@@ -934,6 +935,7 @@ async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key
             
             spec = DesignSpec(**spec_data)
         evaluation = evaluator_agent.run(spec, eval_request.prompt)
+        system_monitor.increment_evaluations()
 
         # Save evaluation and get report ID
         try:
@@ -978,6 +980,7 @@ async def iterate_rl(request: Request, iterate_request: IterateRequest, api_key:
         rl_agent.max_iterations = n_iter
 
         results = rl_agent.run(iterate_request.prompt, n_iter)
+        system_monitor.increment_rl_iterations(n_iter)
 
         # Track RL training metrics
         try:
