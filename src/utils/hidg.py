@@ -5,6 +5,7 @@ from pathlib import Path
 
 def append_hidg_entry(stage: str, note: str, branch: str = None, commit_hash: str = None):
     """Append HIDG daily log entry after pipeline runs"""
+    import json
 
     # Get git info from environment or defaults
     branch = branch or os.getenv('GIT_BRANCH', 'main')
@@ -22,6 +23,18 @@ def append_hidg_entry(stage: str, note: str, branch: str = None, commit_hash: st
     log_path = reports_dir / "daily_log.txt"
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(entry)
+
+    # Also append to JSONL
+    jsonl_entry = {
+        "timestamp": timestamp,
+        "stage": stage,
+        "note": note,
+        "branch": branch,
+        "commit_hash": commit_hash
+    }
+    jsonl_path = reports_dir / "agent_log.jsonl"
+    with open(jsonl_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(jsonl_entry) + "\n")
 
     print(f"[HIDG] Logged: {stage} - {note}")
 
