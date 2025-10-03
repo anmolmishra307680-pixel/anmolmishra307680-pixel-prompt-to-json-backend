@@ -35,6 +35,17 @@ def get_current_user(authorization: str = Header(None)):
     if not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization header")
     token = authorization.split(" ", 1)[1]
+    
+    # Try new JWT system first (with type checking)
+    try:
+        from src.auth.jwt_auth import jwt_auth
+        payload = jwt_auth.verify_token(token, "access")
+        if payload:
+            return payload
+    except ImportError:
+        pass
+    
+    # Fallback to old system
     return verify_token(token)
 
 def authenticate_user(username: str, password: str):
