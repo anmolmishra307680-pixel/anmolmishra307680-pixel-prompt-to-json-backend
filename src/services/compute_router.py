@@ -20,5 +20,14 @@ class ComputeRouter:
         async with httpx.AsyncClient() as c:
             r=await c.post(self.yotta_url, json={"prompt":prompt,"context":context}, headers={"Authorization":f"Bearer {self.yotta_key}"})
             return {"result":r.json(),"compute":"yotta"}
+    
+    def get_job_stats(self):
+        return {
+            "local_gpu_available": self.local_gpu,
+            "yotta_configured": bool(self.yotta_key and self.yotta_url),
+            "total_jobs": 0,
+            "local_jobs": 0,
+            "remote_jobs": 0
+        }
 router=ComputeRouter()
 compute_router=router
