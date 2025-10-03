@@ -43,6 +43,7 @@ from src.core.nlp_parser import ObjectTargeter, IterationTracker
 # from src.services.geometry_storage import geometry_storage
 from src.auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
 from src.services.compute_router import compute_router, router
+from src.monitoring.cost_tracker import cost_tracker
 from src.utils.system_monitoring import system_monitor, init_sentry
 from src.services.preview_manager import preview_manager
 from src.services.frontend_integration import frontend_integration
@@ -1866,6 +1867,72 @@ async def run_core_pipeline(request: Request, pipeline_data: dict, api_key: str 
             "success": True,
             "pipeline": pipeline_steps,
             "results": results
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/costs/daily", tags=["💰 Cost Management"])
+@limiter.limit("20/minute")
+async def get_daily_costs(request: Request, date: str = None, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get daily cost report"""
+    try:
+        report = cost_tracker.get_daily_report(date)
+        return {
+            "success": True,
+            "report": report
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/costs/weekly", tags=["💰 Cost Management"])
+@limiter.limit("20/minute")
+async def get_weekly_costs(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get weekly cost report with trends"""
+    try:
+        report = cost_tracker.get_weekly_report()
+        return {
+            "success": True,
+            "report": report
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/compute/stats", tags=["💰 Cost Management"])
+@limiter.limit("20/minute")
+async def get_compute_stats(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get comprehensive compute statistics"""
+    try:
+        stats = compute_router.get_job_stats()
+        cost_report = compute_router.get_cost_report()
+        usage_patterns = cost_tracker.get_usage_patterns()
+        
+        return {
+            "success": True,
+            "compute_stats": stats,
+            "cost_report": cost_report,
+            "usage_patterns": usage_patterns
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/monitoring/sentry", tags=["📊 System Monitoring"])
+@limiter.limit("20/minute")
+async def get_sentry_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Get Sentry monitoring status"""
+    try:
+        from src.utils.system_monitoring import capture_message
+        
+        # Test Sentry integration
+        capture_message("Sentry status check", "info", {"endpoint": "/api/v1/monitoring/sentry"})
+        
+        sentry_configured = bool(os.getenv("SENTRY_DSN"))
+        
+        return {
+            "success": True,
+            "sentry_configured": sentry_configured,
+            "environment": os.getenv("ENVIRONMENT", "development"),
+            "dsn_configured": bool(os.getenv("SENTRY_DSN")),
+            "test_message_sent": True
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

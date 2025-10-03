@@ -148,23 +148,70 @@ system_uptime_seconds {metrics['uptime_seconds']}
 # Global instance
 system_monitor = SystemMonitor()
 
-# Sentry integration
+# Enhanced Sentry integration
 def init_sentry():
-    """Initialize Sentry error tracking"""
+    """Initialize comprehensive Sentry error tracking"""
     try:
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
         
         sentry_dsn = os.getenv("SENTRY_DSN")
         if sentry_dsn:
             sentry_sdk.init(
                 dsn=sentry_dsn,
-                integrations=[FastApiIntegration()],
+                environment=os.getenv("ENVIRONMENT", "development"),
                 traces_sample_rate=0.1,
-                environment=os.getenv("ENVIRONMENT", "development")
+                profiles_sample_rate=0.1,
+                integrations=[
+                    FastApiIntegration(auto_enabling_integrations=True),
+                    SqlalchemyIntegration(),
+                    LoggingIntegration(level=None, event_level=None)
+                ],
+                attach_stacktrace=True,
+                send_default_pii=False,
+                before_send=filter_sentry_events
             )
-            print("[OK] Sentry monitoring initialized")
+            print(f"[OK] Sentry monitoring initialized for {os.getenv('ENVIRONMENT', 'development')}")
             return True
     except ImportError:
-        print("[WARN] Sentry not available")
+        print("[WARN] Sentry not available - install: pip install sentry-sdk")
     return False
+
+def filter_sentry_events(event, hint):
+    """Filter Sentry events to reduce noise"""
+    # Skip health check errors
+    if 'request' in event and event['request'].get('url', '').endswith('/health'):
+        return None
+    
+    # Skip 404 errors for missing static files
+    if event.get('exception', {}).get('values', [{}])[0].get('type') == 'HTTPException':
+        if '404' in str(event.get('exception', {}).get('values', [{}])[0].get('value', '')):
+            return None
+    
+    return event
+
+def capture_exception(error: Exception, context: Dict[str, Any] = None):
+    """Capture exception with context"""
+    try:
+        import sentry_sdk
+        with sentry_sdk.push_scope() as scope:
+            if context:
+                for key, value in context.items():
+                    scope.set_tag(key, value)
+            sentry_sdk.capture_exception(error)
+    except ImportError:
+        pass
+
+def capture_message(message: str, level: str = "info", context: Dict[str, Any] = None):
+    """Capture message with context"""
+    try:
+        import sentry_sdk
+        with sentry_sdk.push_scope() as scope:
+            if context:
+                for key, value in context.items():
+                    scope.set_tag(key, value)
+            sentry_sdk.capture_message(message, level)
+    except ImportError:
+        pass
