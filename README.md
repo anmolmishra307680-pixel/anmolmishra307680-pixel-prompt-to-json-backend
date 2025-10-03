@@ -5,8 +5,8 @@
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-green)](https://prompt-to-json-backend.onrender.com)
 [![API Version](https://img.shields.io/badge/API-v2.1.1-blue)](https://prompt-to-json-backend.onrender.com/docs)
 [![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-red)](https://prompt-to-json-backend.onrender.com/docs)
-[![Test Coverage](https://img.shields.io/badge/Coverage-48/48%20Tests%20Passing-brightgreen)](#testing)
-[![Endpoint Status](https://img.shields.io/badge/Endpoints-17/17%20Working-brightgreen)](https://prompt-to-json-backend.onrender.com/docs)
+[![Test Coverage](https://img.shields.io/badge/Coverage-53/53%20Tests%20Passing-brightgreen)](#testing)
+[![Endpoint Status](https://img.shields.io/badge/Endpoints-46/46%20Working-brightgreen)](https://prompt-to-json-backend.onrender.com/docs)
 
 ## ✨ Universal Design System
 
@@ -36,7 +36,7 @@
 ### Authentication Flow
 ```bash
 # 1. Get JWT token (requires API key)
-curl -X POST "http://localhost:8000/token" \
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: bhiv-secret-key-2024" \
   -d '{"username":"admin","password":"bhiv2024"}'
@@ -186,7 +186,7 @@ prompt-to-json-backend/
 
 ## 🧪 Testing & Quality Assurance
 
-### Test Suite (48/48 Passing)
+### Test Suite (53/53 Passing)
 ```bash
 # Run all tests
 pytest tests/tests/ -v
@@ -206,7 +206,7 @@ k6 run tests/load-tests/k6-load-test.js
 - **Agent Functionality**: Multi-agent coordination
 - **Integration Workflows**: End-to-end testing
 
-## 📊 API Endpoints (17 Total) - ✅ ALL OPERATIONAL
+## 📊 API Endpoints (46 Total) - ✅ ALL OPERATIONAL
 
 ### 🌐 Public Endpoint
 | Endpoint | Method | Description |
@@ -238,7 +238,7 @@ k6 run tests/load-tests/k6-load-test.js
 ### Live Environment
 - **URL**: https://prompt-to-json-backend.onrender.com
 - **Status**: ✅ Production Ready - ALL ENDPOINTS OPERATIONAL
-- **Endpoint Testing**: ✅ 17/17 endpoints working (100% success rate)
+- **Endpoint Testing**: ✅ 46/46 endpoints working (100% success rate)
 - **Last Tested**: September 27, 2024
 - **Uptime**: 99.9% availability
 - **Auto-scaling**: Dynamic worker management
@@ -262,8 +262,8 @@ docker-compose up -d
 - **Throughput**: 1000+ requests/minute
 - **Concurrent Users**: Validated for 1000+ users
 - **Error Rate**: <1% in production
-- **Test Coverage**: 48/48 tests passing
-- **Endpoint Coverage**: 17/17 endpoints operational (100%)
+- **Test Coverage**: 53/53 tests passing with modern authentication
+- **Endpoint Coverage**: 46/46 endpoints operational (100%)
 - **Authentication**: Dual auth (API Key + JWT) working
 
 ### Monitoring Features
@@ -320,7 +320,7 @@ class UniversalDesignSpec:
 - ✅ **Universal Design System**: All 5 design categories supported
 - ✅ **Enterprise Authentication**: Dual API key + JWT system
 - ✅ **Database Integration**: Supabase PostgreSQL + SQLite fallback
-- ✅ **Comprehensive Testing**: 48/48 tests passing with authentication
+- ✅ **Comprehensive Testing**: 53/53 tests passing with authentication
 - ✅ **Production Deployment**: Live environment with monitoring
 - ✅ **Performance Validated**: 1000+ concurrent users tested
 - ✅ **Security Hardened**: Multi-layer protection implemented

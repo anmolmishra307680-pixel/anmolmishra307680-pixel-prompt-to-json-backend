@@ -38,6 +38,9 @@ All notable changes to the Prompt-to-JSON Backend project are documented in this
 - **Enhanced** Compliance schema with proper request/response models
 - **Improved** Error handling and validation messages
 - **Streamlined** Development setup with cleaner console output
+- **Fixed** All test authentication to use new `/api/v1/auth/login` endpoint
+- **Resolved** 11 failing tests due to legacy endpoint removal
+- **Maintained** 100% test coverage with modern authentication system
 
 ### 📚 Documentation Updates
 - **Updated** README.md with organized endpoint structure
