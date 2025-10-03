@@ -9,7 +9,8 @@ if sys.platform.startswith('win'):
         sys.stderr.reconfigure(encoding='utf-8')
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
-from fastapi import FastAPI, HTTPException, Request, Depends, Response
+from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
@@ -168,6 +169,20 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
+# Startup event for logging
+@app.on_event("startup")
+async def startup_event():
+    print(f"[STARTUP] Prompt-to-JSON API v{API_VERSION} starting up...")
+    print(f"[STARTUP] Environment: {'Production' if os.getenv('PRODUCTION_MODE') == 'true' else 'Development'}")
+    print(f"[STARTUP] Database: {'Supabase PostgreSQL' if hasattr(db, 'supabase_client') else 'SQLite Fallback'}")
+    print(f"[STARTUP] Agents initialized: {len([a for a in [prompt_agent, evaluator_agent, rl_agent] if hasattr(a, 'run')])}")
+    print(f"[STARTUP] Server ready to accept requests")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    print(f"[SHUTDOWN] Prompt-to-JSON API v{API_VERSION} shutting down...")
+    print(f"[SHUTDOWN] Cleanup completed")
+
 # Rate limiter with slowapi
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -247,14 +262,24 @@ except ImportError:
 # Initialize Sentry monitoring
 init_sentry()
 
-# Request tracking middleware
+# Request tracking middleware with detailed logging
 @app.middleware("http")
 async def track_requests(request: Request, call_next):
+    start_time = time.time()
+    client_ip = request.client.host if request.client else "unknown"
+    
+    # Log all requests to Render logs
+    print(f"[REQUEST] {request.method} {request.url.path} from {client_ip}")
+    
     system_monitor.increment_requests()
     try:
         response = await call_next(request)
+        duration = time.time() - start_time
+        print(f"[RESPONSE] {request.method} {request.url.path} -> {response.status_code} ({duration:.3f}s)")
         return response
     except Exception as e:
+        duration = time.time() - start_time
+        print(f"[ERROR] {request.method} {request.url.path} -> ERROR: {str(e)} ({duration:.3f}s)")
         system_monitor.increment_errors()
         raise
 
@@ -378,43 +403,67 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/", tags=["📊 System Monitoring"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def root(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Root endpoint"""
-    return {
+    """Root endpoint - supports both GET and HEAD requests"""
+    print(f"[INFO] Root endpoint accessed: {request.method} from {request.client.host if request.client else 'unknown'}")
+    
+    response_data = {
         "message": "Prompt-to-JSON API",
         "version": API_VERSION,
         "status": "Production Ready",
         "features": ["AI Agents", "Multi-Agent Coordination", "RL Training", "JWT Authentication", "Monitoring"]
     }
+    
+    # For HEAD requests, return empty body but same headers
+    if request.method == "HEAD":
+        return Response(status_code=200, headers={"Content-Type": "application/json"})
+    
+    return response_data
 
 
 @app.get("/health", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def health_check(request: Request):
     """Public health check endpoint for monitoring"""
+    client_ip = request.client.host if request.client else "unknown"
+    print(f"[HEALTH] Health check from {client_ip}")
+    
     try:
         # Test database connection
         session = db.get_session()
         session.close()
         db_status = True
+        print(f"[HEALTH] Database connection: OK")
     except Exception as e:
         db_status = False
-        print(f"Database health check failed: {e}")
+        print(f"[HEALTH] Database connection failed: {e}")
 
     # Test agent availability
     agents_status = []
     for name, agent in [("prompt", prompt_agent), ("evaluator", evaluator_agent), ("rl", rl_agent)]:
         if hasattr(agent, 'run'):
             agents_status.append(name)
-
-    return {
+    
+    print(f"[HEALTH] Active agents: {agents_status}")
+    
+    health_data = {
         "status": "healthy" if db_status else "degraded",
         "database": db_status,
         "agents": agents_status,
+        "version": API_VERSION,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+    
+    print(f"[HEALTH] Status: {health_data['status']}")
+    return health_data
+
+@app.get("/ping", tags=["📊 System Monitoring"])
+async def ping():
+    """Simple ping endpoint for load balancer health checks"""
+    print(f"[PING] Ping received at {datetime.now(timezone.utc).isoformat()}")
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/basic-metrics", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
@@ -450,6 +499,9 @@ async def basic_metrics(request: Request, api_key: str = Depends(verify_api_key)
 async def generate_spec(request: Request, generate_request: GenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Generate specification from prompt"""
     start_time = time.time()
+    client_ip = request.client.host if request.client else "unknown"
+    print(f"[GENERATE] Request from {client_ip}: '{generate_request.prompt[:50]}...'")
+    
     try:
         # Generate spec directly using MainAgent
         system_monitor.increment_jobs()
