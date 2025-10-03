@@ -25,7 +25,8 @@ class JWTAuth:
         self.algorithm = "HS256"
         self.access_token_expire = 15  # 15 minutes
         self.refresh_token_expire = 7 * 24 * 60  # 7 days in minutes
-        self.blacklisted_tokens = set()  # Store blacklisted token IDs
+        self.blacklist_file = "blacklisted_tokens.txt"
+        self.blacklisted_tokens = self._load_blacklist()
         
     def create_tokens(self, user_data: Dict[str, Any]) -> TokenResponse:
         """Create access and refresh tokens"""
@@ -90,9 +91,29 @@ class JWTAuth:
         old_jti = payload.get("jti")
         if old_jti:
             self.blacklisted_tokens.add(old_jti)
+            self._save_blacklist()
         
         return self.create_tokens({"username": payload["sub"]})
 
+    def _load_blacklist(self) -> set:
+        """Load blacklisted tokens from file"""
+        try:
+            if os.path.exists(self.blacklist_file):
+                with open(self.blacklist_file, 'r') as f:
+                    return set(line.strip() for line in f if line.strip())
+        except Exception:
+            pass
+        return set()
+    
+    def _save_blacklist(self):
+        """Save blacklisted tokens to file"""
+        try:
+            with open(self.blacklist_file, 'w') as f:
+                for jti in self.blacklisted_tokens:
+                    f.write(f"{jti}\n")
+        except Exception:
+            pass
+    
     def blacklist_token(self, token: str) -> bool:
         """Manually blacklist a token"""
         try:
@@ -100,6 +121,7 @@ class JWTAuth:
             jti = payload.get("jti")
             if jti:
                 self.blacklisted_tokens.add(jti)
+                self._save_blacklist()
                 return True
         except jwt.InvalidTokenError:
             pass
