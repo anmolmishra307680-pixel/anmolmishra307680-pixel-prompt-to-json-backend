@@ -231,10 +231,7 @@ k6 run tests/load-tests/k6-load-test.js
 | `/metrics` | GET | Prometheus metrics |
 | `/` | GET | API information |
 
-### 🔑 Authentication Endpoint (API Key Required)
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/token` | POST | JWT token generation |
+
 
 ## 🚀 Production Deployment
 

@@ -13,21 +13,25 @@ class CacheManager:
         self._memory_cache: Dict[str, Dict[str, Any]] = {}
         self._cache_stats = {"hits": 0, "misses": 0, "sets": 0}
 
-        try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            self.redis_client = redis.from_url(
-                redis_url,
-                socket_connect_timeout=2,
-                socket_timeout=2,
-                decode_responses=True
-            )
-            # Test connection
-            self.redis_client.ping()
-            print("[OK] Redis connected successfully")
-        except Exception as e:
-            print(f"[WARN] Redis not available: {e}")
-            print("[INFO] Using in-memory cache fallback")
+        # Skip Redis in development - use memory cache only
+        if os.getenv("REDIS_ENABLED", "false").lower() == "true":
+            try:
+                redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+                self.redis_client = redis.from_url(
+                    redis_url,
+                    socket_connect_timeout=1,
+                    socket_timeout=1,
+                    decode_responses=True
+                )
+                self.redis_client.ping()
+                print("[OK] Redis connected successfully")
+            except Exception:
+                self.redis_client = None
+        else:
             self.redis_client = None
+            
+        if not self.redis_client:
+            print("[INFO] Using in-memory cache (Redis disabled)")
 
     def get_cache_key(self, prompt: str, operation: str = "generate") -> str:
         """Generate cache key from prompt"""

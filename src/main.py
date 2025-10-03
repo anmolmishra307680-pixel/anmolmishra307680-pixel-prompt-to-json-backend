@@ -34,6 +34,7 @@ from src.core.auth import create_access_token, get_current_user
 from src.core import error_handlers
 from src.core.lm_adapter import LocalLMAdapter
 from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
+from src.schemas.compliance_schema import ComplianceRunCaseRequest, ComplianceRunCaseResponse, ComplianceFeedbackRequest, ComplianceFeedbackResponse
 # from src.services.preview_generator import generate_preview
 from src.core.nlp_parser import ObjectTargeter
 # from src.services.spec_storage import spec_storage
@@ -148,12 +149,7 @@ def custom_openapi():
                         if param.get("name") not in ["authorization", "Authorization", "X-API-Key"]
                     ]
 
-                if path == "/token":
-                    # Token endpoint requires only API key
-                    operation["security"] = [
-                        {"APIKeyHeader": []}
-                    ]
-                elif path == "/health":
+                if path == "/health":
                     # Health endpoint is public for monitoring
                     operation["security"] = []
                 else:
@@ -318,33 +314,9 @@ class LogValuesRequest(BaseModel):
     achievements: Dict[Any, Any] = None
     technical_notes: Dict[Any, Any] = None
 
-class TokenRequest(BaseModel):
-    username: str
-    password: str
 
-@app.post("/token")
-@limiter.limit("10/minute")
-def token_create(request: Request, payload: TokenRequest, api_key: str = Depends(verify_api_key)):
-    """Create JWT token for authentication (requires API key)"""
-    username = payload.username
-    password = payload.password
-    if not username or not password:
-        raise HTTPException(status_code=400, detail="username and password required")
 
-    # Check against environment variables for security
-    demo_username = os.getenv("DEMO_USERNAME")
-    demo_password = os.getenv("DEMO_PASSWORD")
-
-    if not demo_username or not demo_password:
-        raise HTTPException(status_code=500, detail="Authentication not configured")
-
-    if username == demo_username and password == demo_password:
-        token = create_access_token({"sub": username})
-        return {"access_token": token, "token_type": "bearer"}
-
-    raise HTTPException(status_code=401, detail="Invalid credentials")
-
-@app.post("/api/v1/auth/login")
+@app.post("/api/v1/auth/login", tags=["🔐 Authentication & Security"])
 @limiter.limit("10/minute")
 async def login_v2(request: Request, login_data: LoginRequest, api_key: str = Depends(verify_api_key)):
     """Enhanced JWT login with refresh tokens"""
@@ -370,7 +342,7 @@ async def login_v2(request: Request, login_data: LoginRequest, api_key: str = De
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/auth/refresh")
+@app.post("/api/v1/auth/refresh", tags=["🔐 Authentication & Security"])
 @limiter.limit("20/minute")
 async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key: str = Depends(verify_api_key)):
     """Refresh access token"""
@@ -388,7 +360,7 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
+@app.get("/", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def root(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Root endpoint"""
@@ -400,7 +372,7 @@ async def root(request: Request, api_key: str = Depends(verify_api_key), user=De
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def health_check(request: Request):
     """Public health check endpoint for monitoring"""
@@ -426,7 +398,7 @@ async def health_check(request: Request):
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
-@app.get("/basic-metrics")
+@app.get("/basic-metrics", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def basic_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Basic metrics endpoint"""
@@ -455,7 +427,7 @@ async def basic_metrics(request: Request, api_key: str = Depends(verify_api_key)
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
-@app.post("/generate")
+@app.post("/generate", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def generate_spec(request: Request, generate_request: GenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Generate specification from prompt"""
@@ -501,7 +473,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
             print(f"HIDG logging error: {log_error}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/generate")
+@app.post("/api/v1/generate", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Enhanced generation with LM adapter and v2 schema"""
@@ -588,7 +560,7 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
         
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/switch")
+@app.post("/api/v1/switch", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def switch_material(request: Request, body: SwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Switch object materials/properties based on natural language instruction"""
@@ -683,26 +655,27 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/compliance/run_case")
+@app.post("/api/v1/compliance/run_case", response_model=ComplianceRunCaseResponse, tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
-async def compliance_run_case(request: Request, case_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Proxy to Soham's /run_case endpoint"""
+async def compliance_run_case(request: Request, case_data: ComplianceRunCaseRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Run compliance analysis on design specification"""
     try:
-        # Add case_id if not present
-        if 'case_id' not in case_data:
+        # Convert to dict and add case_id if not present
+        case_dict = case_data.model_dump()
+        if not case_dict.get('case_id'):
             import uuid
-            case_data['case_id'] = str(uuid.uuid4())
+            case_dict['case_id'] = str(uuid.uuid4())
         
         # Enhanced compliance processing
         try:
             from src.integrations.soham_compliance import SohamComplianceIntegration
             soham_compliance = SohamComplianceIntegration()
-            result = await soham_compliance.run_case(case_data)
+            result = await soham_compliance.run_case(case_dict)
         except ImportError:
             # Fallback to existing compliance service
             try:
                 from src.services.compliance import proxy as compliance_proxy
-                result = await compliance_proxy.run_case(case_data)
+                result = await compliance_proxy.run_case(case_dict)
             except ImportError:
                 # Final fallback
                 result = {
@@ -712,8 +685,8 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
                 }
         
         # Store geometry if provided
-        case_id = case_data['case_id']
-        project_id = case_data.get('project_id', case_id)
+        case_id = case_dict['case_id']
+        project_id = case_dict.get('project_id', case_id)
         
         if 'geometry_data' in result:
             # Mock geometry file storage
@@ -728,7 +701,7 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
         
         # Save to database
         try:
-            db.save_compliance_case(case_id, project_id, case_data, result)
+            db.save_compliance_case(case_id, project_id, case_dict, result)
         except Exception as e:
             print(f"Failed to save compliance case: {e}")
         
@@ -737,22 +710,22 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Compliance service error: {str(e)}")
 
-@app.post("/api/v1/compliance/feedback")
+@app.post("/api/v1/compliance/feedback", response_model=ComplianceFeedbackResponse, tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
-async def compliance_feedback(request: Request, feedback_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Proxy to Soham's /feedback endpoint"""
+async def compliance_feedback(request: Request, feedback_data: ComplianceFeedbackRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Submit feedback for compliance analysis results"""
     try:
         try:
             from src.services.compliance import proxy as compliance_proxy
         except ImportError:
             raise HTTPException(status_code=503, detail="Compliance service not available")
-        result = await compliance_proxy.send_feedback(feedback_data)
+        result = await compliance_proxy.send_feedback(feedback_data.model_dump())
         
         # Save feedback to database
         try:
-            case_id = feedback_data.get('case_id')
+            case_id = feedback_data.case_id
             if case_id:
-                db.save_compliance_feedback(case_id, feedback_data, result)
+                db.save_compliance_feedback(case_id, feedback_data.model_dump(), result)
         except Exception as e:
             print(f"Failed to save compliance feedback: {e}")
         
@@ -765,7 +738,7 @@ async def compliance_feedback(request: Request, feedback_data: dict, api_key: st
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Compliance feedback error: {str(e)}")
 
-@app.get("/geometry/{case_id}")
+@app.get("/geometry/{case_id}", tags=["⚖️ Compliance Pipeline"])
 async def get_geometry(case_id: str):
     """Get geometry file for case_id"""
     try:
@@ -790,7 +763,7 @@ async def get_geometry(case_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/pipeline/run")
+@app.post("/api/v1/pipeline/run", tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("10/minute")
 async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """End-to-end compliance pipeline: spec → compliance → geometry"""
@@ -864,7 +837,7 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
 
-@app.post("/evaluate")
+@app.post("/evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Evaluate specification"""
@@ -941,7 +914,7 @@ async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/iterate")
+@app.post("/iterate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def iterate_rl(request: Request, iterate_request: IterateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Run RL iterations with detailed before→after, scores, feedback"""
@@ -1014,7 +987,7 @@ async def iterate_rl(request: Request, iterate_request: IterateRequest, api_key:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/reports/{report_id}")
+@app.get("/reports/{report_id}", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
 async def get_report(request: Request, report_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Retrieve full report from DB"""
@@ -1030,7 +1003,7 @@ async def get_report(request: Request, report_id: str, api_key: str = Depends(ve
         print(f"Failed to retrieve report {report_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve report")
 
-@app.post("/log-values")
+@app.post("/log-values", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
 async def log_values(request: Request, log_request: LogValuesRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Store HIDG values per day"""
@@ -1095,7 +1068,7 @@ async def log_values(request: Request, log_request: LogValuesRequest, api_key: s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/batch-evaluate")
+@app.post("/batch-evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def batch_evaluate(request: Request, prompts: List[str], api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Process multiple specs/prompts and store evaluations"""
@@ -1122,7 +1095,7 @@ async def batch_evaluate(request: Request, prompts: List[str], api_key: str = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/iterations/{session_id}")
+@app.get("/iterations/{session_id}", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
 async def get_iteration_logs(request: Request, session_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get all iteration logs for a session"""
@@ -1156,7 +1129,7 @@ async def get_iteration_logs(request: Request, session_id: str, api_key: str = D
         print(f"Failed to retrieve iteration logs for session {session_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve iteration logs")
 
-@app.get("/cli-tools")
+@app.get("/cli-tools", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def get_cli_tools(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get available CLI tools and commands"""
@@ -1173,6 +1146,7 @@ async def get_cli_tools(request: Request, api_key: str = Depends(verify_api_key)
         "database_status": db_status,
         "database_tables": db_tables,
         "available_endpoints": {
+            "/api/v1/auth/login": "Enhanced JWT authentication",
             "/generate": "Generate specifications (requires API key)",
             "/evaluate": "Evaluate specifications (requires API key)",
             "/iterate": "RL training iterations (requires API key)",
@@ -1188,7 +1162,7 @@ async def get_cli_tools(request: Request, api_key: str = Depends(verify_api_key)
         "api_key_required": "X-API-Key: <your-api-key> (set via API_KEY environment variable)"
     }
 
-@app.get("/system-test")
+@app.get("/system-test", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def run_system_test(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Run basic system tests"""
@@ -1210,7 +1184,7 @@ async def run_system_test(request: Request, api_key: str = Depends(verify_api_ke
         print(f"System test failed: {e}")
         raise HTTPException(status_code=500, detail=f"System test failed: {str(e)}")
 
-@app.post("/advanced-rl")
+@app.post("/advanced-rl", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def advanced_rl_training(request: Request, rl_request: IterateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Run Advanced RL training with policy gradients"""
@@ -1233,7 +1207,7 @@ async def advanced_rl_training(request: Request, rl_request: IterateRequest, api
         print(f"Advanced RL training failed: {e}")
         raise HTTPException(status_code=500, detail=f"Advanced RL training failed: {str(e)}")
 
-@app.post("/admin/prune-logs")
+@app.post("/admin/prune-logs", tags=["🔧 Administration"])
 @limiter.limit("20/minute")
 async def prune_logs(request: Request, retention_days: int = 30, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Prune old logs for production scalability"""
@@ -1252,7 +1226,7 @@ async def prune_logs(request: Request, retention_days: int = 30, api_key: str = 
         print(f"Log pruning failed: {e}")
         raise HTTPException(status_code=500, detail=f"Log pruning failed: {str(e)}")
 
-@app.post("/coordinated-improvement")
+@app.post("/coordinated-improvement", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def coordinated_improvement(request: Request, request_data: GenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Advanced agent coordination for optimal results"""
@@ -1280,7 +1254,7 @@ async def coordinated_improvement(request: Request, request_data: GenerateReques
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/agent-status")
+@app.get("/agent-status", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def get_agent_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get status of all AI agents"""
@@ -1301,7 +1275,7 @@ async def get_agent_status(request: Request, api_key: str = Depends(verify_api_k
         print(f"Failed to get agent status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get agent status")
 
-@app.get("/cache-stats")
+@app.get("/cache-stats", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def get_cache_stats(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get cache performance statistics"""
@@ -1316,7 +1290,7 @@ async def get_cache_stats(request: Request, api_key: str = Depends(verify_api_ke
         print(f"Failed to get cache stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get cache stats")
 
-@app.get("/metrics")
+@app.get("/metrics", tags=["📊 System Monitoring"])
 async def get_metrics_public():
     """Public Prometheus metrics endpoint"""
     try:
@@ -1327,7 +1301,7 @@ async def get_metrics_public():
         system_monitor.increment_errors()
         return Response(f"# Error: {str(e)}\n", media_type="text/plain")
 
-@app.get("/api/v1/metrics/detailed")
+@app.get("/api/v1/metrics/detailed", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def get_detailed_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Detailed metrics with authentication"""
@@ -1345,7 +1319,7 @@ async def get_detailed_metrics(request: Request, api_key: str = Depends(verify_a
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/system-overview")
+@app.get("/system-overview", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
 async def get_system_overview(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Comprehensive system status and capabilities"""
@@ -1378,8 +1352,8 @@ async def get_system_overview(request: Request, api_key: str = Depends(verify_ap
             "metrics": metrics_info,
             "endpoints": {
                 "total_endpoints": len([route for route in app.routes if hasattr(route, 'methods')]),
-                "protected_endpoints": len([route for route in app.routes if hasattr(route, 'methods') and route.path not in ["/token", "/metrics"]]),
-                "public_endpoints": len([route for route in app.routes if hasattr(route, 'methods') and route.path in ["/token", "/metrics"]]),
+                "protected_endpoints": len([route for route in app.routes if hasattr(route, 'methods') and route.path not in ["/health", "/metrics"]]),
+                "public_endpoints": len([route for route in app.routes if hasattr(route, 'methods') and route.path in ["/health", "/metrics"]]),
                 "authentication_methods": ["API Key", "JWT Token"]
             },
             "performance": {
@@ -1394,7 +1368,7 @@ async def get_system_overview(request: Request, api_key: str = Depends(verify_ap
         print(f"Failed to get system overview: {e}")
         raise HTTPException(status_code=500, detail="Failed to get system overview")
 
-@app.post("/api/v1/ui/session")
+@app.post("/api/v1/ui/session", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
 async def create_ui_session(request: Request, session_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Create UI testing session for frontend integration"""
@@ -1412,7 +1386,7 @@ async def create_ui_session(request: Request, session_data: dict, api_key: str =
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/ui/flow")
+@app.post("/api/v1/ui/flow", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
 async def log_ui_flow(request: Request, flow_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Log UI testing flow"""
@@ -1435,7 +1409,7 @@ async def log_ui_flow(request: Request, flow_data: dict, api_key: str = Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/ui/summary")
+@app.get("/api/v1/ui/summary", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
 async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get UI testing summary"""
@@ -1448,7 +1422,7 @@ async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_ap
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/three-js/{spec_id}")
+@app.get("/api/v1/three-js/{spec_id}", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
 async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Get Three.js formatted data for spec"""
@@ -1472,7 +1446,7 @@ async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/preview/refresh")
+@app.post("/api/v1/preview/refresh", tags=["🖼️ Preview Management"])
 @limiter.limit("10/minute")
 async def refresh_preview(request: Request, refresh_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Force refresh preview for spec"""
@@ -1500,7 +1474,7 @@ async def refresh_preview(request: Request, refresh_data: dict, api_key: str = D
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/preview/verify")
+@app.get("/api/v1/preview/verify", tags=["🖼️ Preview Management"])
 async def verify_preview_url(request: Request, spec_id: str, expires: int, signature: str):
     """Verify signed preview URL"""
     try:
@@ -1519,7 +1493,7 @@ async def verify_preview_url(request: Request, spec_id: str, expires: int, signa
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/preview/cleanup")
+@app.post("/api/v1/preview/cleanup", tags=["🖼️ Preview Management"])
 @limiter.limit("5/minute")
 async def cleanup_stale_previews(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Cleanup stale preview URLs"""
@@ -1534,7 +1508,7 @@ async def cleanup_stale_previews(request: Request, api_key: str = Depends(verify
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/mobile/generate")
+@app.post("/api/v1/mobile/generate", tags=["📱 Mobile Platform"])
 @limiter.limit("20/minute")
 async def mobile_generate(request: Request, mobile_request: MobileGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Mobile-optimized generate endpoint for React Native/Expo"""
@@ -1567,7 +1541,7 @@ async def mobile_generate(request: Request, mobile_request: MobileGenerateReques
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/mobile/switch")
+@app.post("/api/v1/mobile/switch", tags=["📱 Mobile Platform"])
 @limiter.limit("20/minute")
 async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Mobile-optimized switch endpoint"""
@@ -1614,7 +1588,7 @@ async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, a
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/vr/generate")
+@app.post("/api/v1/vr/generate", tags=["🥽 VR/AR Platform"])
 @limiter.limit("10/minute")
 async def vr_generate(request: Request, vr_request: VRGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """VR scene generation stub for Bhavesh"""
@@ -1630,7 +1604,7 @@ async def vr_generate(request: Request, vr_request: VRGenerateRequest, api_key: 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/ar/overlay")
+@app.post("/api/v1/ar/overlay", tags=["🥽 VR/AR Platform"])
 @limiter.limit("10/minute")
 async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """AR overlay creation stub for Bhavesh"""
@@ -1648,7 +1622,7 @@ async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: st
 
 
 
-@app.post("/api/v1/evaluate")
+@app.post("/api/v1/evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def evaluate_v2(request: Request, eval_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Enhanced evaluation endpoint"""
@@ -1680,7 +1654,7 @@ async def evaluate_v2(request: Request, eval_data: dict, api_key: str = Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/iterate")
+@app.post("/api/v1/iterate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
 async def iterate_v2(request: Request, iter_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Enhanced RL iteration endpoint"""
@@ -1703,7 +1677,7 @@ async def iterate_v2(request: Request, iter_data: dict, api_key: str = Depends(v
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/core/run")
+@app.post("/api/v1/core/run", tags=["🎛️ Core Orchestration"])
 @limiter.limit("10/minute")
 async def run_core_pipeline(request: Request, pipeline_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Core orchestration pipeline - Task 7 Day 3 requirement"""
