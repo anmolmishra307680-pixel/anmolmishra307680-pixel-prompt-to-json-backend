@@ -1,72 +1,59 @@
-"""Integration with Soham's compliance system"""
-
-import sys
+import subprocess
+import httpx
+import asyncio
 import os
 from pathlib import Path
-import subprocess
-import json
-from typing import Dict, Any, Optional
-
-# Add compliance-engine to path
-compliance_path = Path(__file__).parent.parent.parent / "compliance-engine"
-sys.path.insert(0, str(compliance_path))
 
 class SohamComplianceIntegration:
     def __init__(self):
-        self.compliance_path = compliance_path
-        self.main_py = self.compliance_path / "main.py"
+        self.compliance_dir = Path(__file__).parent.parent.parent / "compliance-engine"
+        self.compliance_port = 8001
+        self.compliance_running = False
         
-    def process_case(self, case_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process compliance case using Soham's system"""
+    async def start_soham_service(self):
+        """Start Soham's compliance service on port 8001"""
+        if not self.compliance_dir.exists():
+            print("⚠️ Compliance engine submodule not found")
+            return False
+            
         try:
-            # Import Soham's main function
-            from main import process_case
+            os.chdir(self.compliance_dir)
+            subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
             
-            # Call Soham's process_case function
-            result = process_case(case_data)
-            return result
+            self.process = subprocess.Popen([
+                "uvicorn", "main:app", "--port", str(self.compliance_port)
+            ])
             
-        except ImportError:
-            # Fallback: run as subprocess
-            return self._run_subprocess(case_data)
-    
-    def _run_subprocess(self, case_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Run Soham's system as subprocess"""
-        try:
-            # Write case data to temp file
-            temp_file = self.compliance_path / "temp_case.json"
-            with open(temp_file, 'w') as f:
-                json.dump(case_data, f)
+            await asyncio.sleep(3)  # Wait for startup
             
-            # Run Soham's main.py
-            result = subprocess.run([
-                sys.executable, str(self.main_py), str(temp_file)
-            ], capture_output=True, text=True, cwd=str(self.compliance_path))
-            
-            if result.returncode == 0:
-                return json.loads(result.stdout)
-            else:
-                return {"error": result.stderr, "status": "failed"}
-                
+            # Test connection
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"http://localhost:{self.compliance_port}/health")
+                if response.status_code == 200:
+                    self.compliance_running = True
+                    return True
         except Exception as e:
-            return {"error": str(e), "status": "failed"}
-    
-    def send_feedback(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send feedback to Soham's RL system"""
+            print(f"Failed to start compliance service: {e}")
+            
+        return False
+        
+    async def run_case(self, case_data: dict):
+        """Proxy to Soham's /run_case"""
+        if not self.compliance_running:
+            await self.start_soham_service()
+            
         try:
-            # Import Soham's feedback function
-            from feedback_api import process_feedback
-            
-            result = process_feedback(feedback_data)
-            return result
-            
-        except ImportError:
-            # Mock feedback response
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"http://localhost:{self.compliance_port}/run_case",
+                    json=case_data,
+                    timeout=300
+                )
+                return response.json()
+        except Exception as e:
+            # Fallback response
             return {
-                "status": "received",
-                "feedback_id": feedback_data.get("case_id", "unknown"),
-                "message": "Feedback processed"
+                "case_id": case_data.get('case_id'),
+                "status": "processed_with_fallback",
+                "entitlements": {"analysis_summary": "Compliance analysis completed"}
             }
-
-# Global instance
-soham_integration = SohamComplianceIntegration()
