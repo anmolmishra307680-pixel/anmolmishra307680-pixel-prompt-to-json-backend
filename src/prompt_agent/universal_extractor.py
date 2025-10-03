@@ -100,25 +100,56 @@ class UniversalPromptExtractor:
         return materials
     
     def _extract_dimensions(self, prompt_lower: str, design_type: str) -> DimensionSpec:
-        """Extract dimensions based on design type"""
-        if design_type == "building":
-            return DimensionSpec(
-                length=20.0,
-                width=15.0,
-                height=10.0,
-                area=300.0,
-                units="metric"
-            )
-        elif design_type == "vehicle":
-            return DimensionSpec(
-                length=4.5,
-                width=1.8,
-                height=1.5,
-                area=8.1,
-                units="metric"
-            )
-        else:
-            return DimensionSpec(units="metric")
+        """Extract dimensions from prompt text"""
+        import re
+        
+        # Extract numeric values with units
+        length = self._extract_dimension_value(prompt_lower, ['length', 'long'])
+        width = self._extract_dimension_value(prompt_lower, ['width', 'wide'])
+        height = self._extract_dimension_value(prompt_lower, ['height', 'tall', 'high'])
+        depth = self._extract_dimension_value(prompt_lower, ['depth', 'deep'])
+        diameter = self._extract_dimension_value(prompt_lower, ['diameter', 'radius'])
+        
+        # Calculate area if length and width available
+        area = None
+        if length and width:
+            area = length * width
+        
+        # Calculate volume if length, width, height available
+        volume = None
+        if length and width and height:
+            volume = length * width * height
+        
+        return DimensionSpec(
+            length=length,
+            width=width,
+            height=height,
+            depth=depth,
+            diameter=diameter,
+            area=area,
+            volume=volume,
+            units="metric"
+        )
+    
+    def _extract_dimension_value(self, prompt_lower: str, keywords: list) -> float:
+        """Extract dimension value for specific keywords"""
+        import re
+        
+        for keyword in keywords:
+            # Look for patterns like "length of 120 cm" or "120 cm long"
+            patterns = [
+                rf'{keyword}\s+of\s+(\d+(?:\.\d+)?)\s*(?:cm|m|mm|inches?|ft|feet)',
+                rf'(\d+(?:\.\d+)?)\s*(?:cm|m|mm|inches?|ft|feet)\s+{keyword}',
+                rf'{keyword}\s*[=:]?\s*(\d+(?:\.\d+)?)\s*(?:cm|m|mm|inches?|ft|feet)',
+                rf'(\d+(?:\.\d+)?)\s*(?:cm|m|mm|inches?|ft|feet)\s*{keyword}'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, prompt_lower)
+                if match:
+                    return float(match.group(1))
+        
+        return None
     
     def _extract_features(self, prompt_lower: str, design_type: str) -> list:
         """Extract features based on design type"""
