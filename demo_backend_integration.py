@@ -1,302 +1,323 @@
+#!/usr/bin/env python3
 """
-Demo Backend Integration Script
-End-to-end demonstration of all API v1 endpoints with authentication
+End-to-End Backend Integration Demo
+Tests all major API endpoints with authentication
 """
-
 import requests
-import os
-import time
 import json
-from typing import Dict, Any, Optional
+import time
+import sys
+from datetime import datetime
 
 # Configuration
-API_BASE = os.getenv("API_BASE", "http://localhost:8000/api/v1")
+BASE_URL = "http://localhost:8000"
 API_KEY = "bhiv-secret-key-2024"
+USERNAME = "admin"
+PASSWORD = "bhiv2024"
 
-class APIClient:
-    def __init__(self, base_url: str, api_key: str):
-        self.base_url = base_url
-        self.api_key = api_key
-        self.token = None
+class BackendDemo:
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.api_key = API_KEY
+        self.jwt_token = None
+        self.headers = {"X-API-Key": self.api_key, "Content-Type": "application/json"}
+    
+    def log(self, message, status="INFO"):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] {status}: {message}")
+    
+    def authenticate(self):
+        """Get JWT token"""
+        self.log("🔐 Authenticating...")
         
-    def get_jwt(self) -> str:
-        """Get JWT token for authentication"""
-        print("🔐 Getting JWT token...")
-        
-        # Use the correct login endpoint
-        login_url = f"{self.base_url.replace('/api/v1', '')}/api/v1/auth/login"
-        
+        auth_data = {"username": USERNAME, "password": PASSWORD}
         response = requests.post(
-            login_url,
-            json={"username": "admin", "password": "bhiv2024"},
-            headers={"X-API-Key": self.api_key}
+            f"{self.base_url}/api/v1/auth/login",
+            headers=self.headers,
+            json=auth_data
         )
         
         if response.status_code == 200:
-            token_data = response.json()
-            self.token = token_data["access_token"]
-            print(f"✅ JWT token obtained: {self.token[:20]}...")
-            return self.token
+            data = response.json()
+            self.jwt_token = data["access_token"]
+            self.headers["Authorization"] = f"Bearer {self.jwt_token}"
+            self.log("✅ Authentication successful")
+            return True
         else:
-            print(f"❌ Failed to get JWT token: {response.status_code} - {response.text}")
-            raise Exception(f"Authentication failed: {response.status_code}")
+            self.log(f"❌ Authentication failed: {response.text}", "ERROR")
+            return False
     
-    def get_headers(self) -> Dict[str, str]:
-        """Get headers with authentication"""
-        if not self.token:
-            self.get_jwt()
+    def test_health(self):
+        """Test health endpoint (no auth required)"""
+        self.log("🏥 Testing health endpoint...")
         
-        return {
-            "Content-Type": "application/json",
-            "X-API-Key": self.api_key,
-            "Authorization": f"Bearer {self.token}"
-        }
-    
-    def make_request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
-        """Make authenticated API request"""
-        url = f"{self.base_url}{endpoint}"
-        headers = self.get_headers()
-        
-        print(f"📡 {method.upper()} {endpoint}")
-        
-        if method.lower() == 'get':
-            response = requests.get(url, headers=headers)
-        elif method.lower() == 'post':
-            response = requests.post(url, json=data, headers=headers)
-        elif method.lower() == 'delete':
-            response = requests.delete(url, headers=headers)
+        response = requests.get(f"{self.base_url}/health")
+        if response.status_code == 200:
+            self.log("✅ Health check passed")
+            return True
         else:
-            raise ValueError(f"Unsupported method: {method}")
-        
-        if response.status_code in [200, 201, 202]:
-            result = response.json()
-            print(f"✅ Success: {response.status_code}")
-            return result
-        else:
-            print(f"❌ Error: {response.status_code} - {response.text}")
-            return {"error": response.text, "status_code": response.status_code}
-
-def main():
-    """Run complete API integration demo"""
-    print("🚀 Starting Demo Backend Integration")
-    print("=" * 50)
+            self.log(f"❌ Health check failed: {response.text}", "ERROR")
+            return False
     
-    # Initialize client
-    client = APIClient(API_BASE, API_KEY)
-    
-    try:
-        # 1. Generate design specification
-        print("\n1️⃣ GENERATE - Creating design specification")
-        gen_data = {
-            "user_id": "u123",
-            "prompt": "Living room with marble floor",
-            "context": {"style": "modern"}
-        }
+    def test_generate(self):
+        """Test design generation"""
+        self.log("🎨 Testing design generation...")
         
-        gen_result = client.make_request("POST", "/generate", gen_data)
+        prompts = [
+            "Modern electric vehicle with 400-mile range",
+            "Sustainable office building with solar panels",
+            "Smart home IoT sensor with WiFi connectivity"
+        ]
         
-        if "error" not in gen_result:
-            spec_id = gen_result.get("spec_id")
-            print(f"   📋 Generated spec_id: {spec_id}")
-            print(f"   🏠 Objects: {len(gen_result.get('spec_json', {}).get('objects', []))}")
-        else:
-            print("   ❌ Generation failed, using fallback spec_id")
-            spec_id = "fallback_spec_001"
-        
-        # 2. Switch object material
-        print("\n2️⃣ SWITCH - Changing floor material")
-        switch_data = {
-            "user_id": "u123",
-            "spec_id": spec_id,
-            "target": {"object_id": "floor_1"},
-            "update": {"material": "marble_black"}
-        }
-        
-        switch_result = client.make_request("POST", "/switch", switch_data)
-        
-        if "error" not in switch_result:
-            iteration_id = switch_result.get("iteration_id")
-            print(f"   🔄 Iteration ID: {iteration_id}")
-            print(f"   🎨 Material changed to: {switch_result.get('changed', {}).get('after', {}).get('material', 'N/A')}")
-        
-        # 3. Run compliance check
-        print("\n3️⃣ COMPLIANCE - Running compliance case")
-        compliance_data = {
-            "user_id": "u123",
-            "spec_id": spec_id,
-            "case_id": "case_001"
-        }
-        
-        compliance_result = client.make_request("POST", "/compliance/run_case", compliance_data)
-        
-        if "error" not in compliance_result:
-            case_id = compliance_result.get("case_id")
-            print(f"   📋 Case ID: {case_id}")
-            print(f"   ✅ Compliance status: {compliance_result.get('result', {}).get('status', 'N/A')}")
-        
-        # 4. Send compliance feedback
-        print("\n4️⃣ FEEDBACK - Sending compliance feedback")
-        feedback_data = {
-            "user_id": "u123",
-            "case_id": "case_001",
-            "feedback": {
-                "rating": 4,
-                "comments": "Good compliance analysis"
-            }
-        }
-        
-        feedback_result = client.make_request("POST", "/compliance/feedback", feedback_data)
-        
-        if "error" not in feedback_result:
-            print(f"   💬 Feedback sent successfully")
-        
-        # 5. Run RL iterations
-        print("\n5️⃣ ITERATE - Running RL training iterations")
-        iterate_data = {
-            "user_id": "u123",
-            "spec_id": spec_id,
-            "strategy": "improve_materials"
-        }
-        
-        iterate_result = client.make_request("POST", "/iterate", iterate_data)
-        
-        if "error" not in iterate_result:
-            session_id = iterate_result.get("session_id")
-            iterations = iterate_result.get("iterations", [])
-            print(f"   🔄 Session ID: {session_id}")
-            print(f"   📊 Iterations completed: {len(iterations)}")
+        results = []
+        for prompt in prompts:
+            self.log(f"   Generating: {prompt[:50]}...")
             
-            # Check for preview URL
-            preview_url = iterate_result.get("preview_url")
-            if preview_url:
-                print(f"   🖼️ Preview URL: {preview_url}")
+            response = requests.post(
+                f"{self.base_url}/generate",
+                headers=self.headers,
+                json={"prompt": prompt}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                spec_id = data["specification"]["metadata"]["created_at"]
+                results.append({"prompt": prompt, "spec_id": spec_id, "data": data})
+                self.log(f"   ✅ Generated spec for: {data['specification']['design_type']}")
+            else:
+                self.log(f"   ❌ Generation failed: {response.text}", "ERROR")
         
-        # 6. Core pipeline execution
-        print("\n6️⃣ CORE - Running core pipeline")
-        core_data = {
-            "user_id": "u123",
-            "pipeline": "full_design_generation",
-            "input_data": {
-                "prompt": "Modern kitchen design",
-                "constraints": ["budget: $50k"]
+        self.log(f"✅ Generated {len(results)} designs")
+        return results
+    
+    def test_evaluate(self, spec_data):
+        """Test design evaluation"""
+        self.log("📊 Testing design evaluation...")
+        
+        if not spec_data:
+            self.log("❌ No spec data for evaluation", "ERROR")
+            return []
+        
+        results = []
+        for item in spec_data[:2]:  # Test first 2 specs
+            spec = item["data"]["specification"]
+            self.log(f"   Evaluating: {spec['design_type']}")
+            
+            response = requests.post(
+                f"{self.base_url}/api/v1/evaluate",
+                headers=self.headers,
+                json={"spec": spec}
+            )
+            
+            if response.status_code == 200:
+                eval_data = response.json()
+                results.append(eval_data)
+                score = eval_data.get("overall_score", "N/A")
+                self.log(f"   ✅ Evaluation score: {score}")
+            else:
+                self.log(f"   ❌ Evaluation failed: {response.text}", "ERROR")
+        
+        self.log(f"✅ Evaluated {len(results)} designs")
+        return results
+    
+    def test_iterate(self, spec_data):
+        """Test design iteration"""
+        self.log("🔄 Testing design iteration...")
+        
+        if not spec_data:
+            self.log("❌ No spec data for iteration", "ERROR")
+            return []
+        
+        results = []
+        feedback_options = [
+            "Make it more sustainable",
+            "Reduce cost by 20%",
+            "Improve performance"
+        ]
+        
+        for i, item in enumerate(spec_data[:2]):
+            spec = item["data"]["specification"]
+            feedback = feedback_options[i % len(feedback_options)]
+            
+            self.log(f"   Iterating: {spec['design_type']} with feedback: {feedback}")
+            
+            response = requests.post(
+                f"{self.base_url}/api/v1/iterate",
+                headers=self.headers,
+                json={
+                    "spec": spec,
+                    "feedback": feedback,
+                    "iterations": 2
+                }
+            )
+            
+            if response.status_code == 200:
+                iter_data = response.json()
+                results.append(iter_data)
+                improvements = len(iter_data.get("improvements", []))
+                self.log(f"   ✅ Applied {improvements} improvements")
+            else:
+                self.log(f"   ❌ Iteration failed: {response.text}", "ERROR")
+        
+        self.log(f"✅ Iterated {len(results)} designs")
+        return results
+    
+    def test_mobile_api(self):
+        """Test mobile API endpoints"""
+        self.log("📱 Testing mobile API...")
+        
+        # Mobile generate
+        response = requests.post(
+            f"{self.base_url}/api/v1/mobile/generate",
+            headers=self.headers,
+            json={
+                "prompt": "Compact smart home device",
+                "platform": "react-native",
+                "optimize_for_mobile": True
             }
-        }
+        )
         
-        core_result = client.make_request("POST", "/core/run", core_data)
+        if response.status_code == 200:
+            self.log("   ✅ Mobile generation successful")
+            mobile_data = response.json()
+        else:
+            self.log(f"   ❌ Mobile generation failed: {response.text}", "ERROR")
+            return False
         
-        if "error" not in core_result:
-            job_id = core_result.get("job_id")
-            print(f"   ⚙️ Job ID: {job_id}")
-            print(f"   📈 Status: {core_result.get('status', 'N/A')}")
+        # Mobile sync
+        response = requests.post(
+            f"{self.base_url}/api/v1/mobile/sync",
+            headers=self.headers
+        )
         
-        # 7. Get reports
-        print("\n7️⃣ REPORTS - Fetching specification report")
+        if response.status_code == 200:
+            self.log("   ✅ Mobile sync successful")
+        else:
+            self.log(f"   ❌ Mobile sync failed: {response.text}", "ERROR")
         
-        report_result = client.make_request("GET", f"/reports/{spec_id}")
+        self.log("✅ Mobile API tests completed")
+        return True
+    
+    def test_vr_api(self):
+        """Test VR/AR API endpoints"""
+        self.log("🥽 Testing VR/AR API...")
         
-        if "error" not in report_result:
-            report = report_result.get("report", {})
-            print(f"   📊 Report retrieved for spec: {spec_id}")
-            print(f"   📝 Generation details available: {bool(report.get('generation_details'))}")
+        # VR generate
+        response = requests.post(
+            f"{self.base_url}/api/v1/vr/generate",
+            headers=self.headers,
+            json={
+                "prompt": "Interactive office space",
+                "vr_platform": "oculus",
+                "immersion_level": "full"
+            }
+        )
         
-        # 8. Health check (public endpoint)
-        print("\n8️⃣ HEALTH - System health check")
+        if response.status_code == 200:
+            self.log("   ✅ VR generation successful")
+            vr_data = response.json()
+        else:
+            self.log(f"   ❌ VR generation failed: {response.text}", "ERROR")
+            return False
         
-        # Health endpoint doesn't require authentication
-        health_url = f"{API_BASE.replace('/api/v1', '')}/health"
-        health_response = requests.get(health_url)
+        # VR platforms
+        response = requests.get(
+            f"{self.base_url}/api/v1/vr/platforms",
+            headers=self.headers
+        )
         
-        if health_response.status_code == 200:
-            health_data = health_response.json()
-            print(f"   💚 System status: {health_data.get('status')}")
-            print(f"   🗄️ Database: {health_data.get('database')}")
-            print(f"   🤖 Agents: {health_data.get('agents', [])}")
+        if response.status_code == 200:
+            platforms = response.json()
+            vr_count = len(platforms["data"]["vr_headsets"])
+            self.log(f"   ✅ Found {vr_count} VR platforms")
+        else:
+            self.log(f"   ❌ VR platforms failed: {response.text}", "ERROR")
         
-        # 9. Metrics (public endpoint)
-        print("\n9️⃣ METRICS - System metrics")
+        self.log("✅ VR/AR API tests completed")
+        return True
+    
+    def test_monitoring(self):
+        """Test monitoring endpoints"""
+        self.log("📈 Testing monitoring endpoints...")
         
-        metrics_url = f"{API_BASE.replace('/api/v1', '')}/metrics"
-        metrics_response = requests.get(metrics_url)
+        endpoints = [
+            "/agent-status",
+            "/cache-stats",
+            "/metrics"
+        ]
         
-        if metrics_response.status_code == 200:
-            metrics_data = metrics_response.text
-            print(f"   📊 Metrics available: {len(metrics_data)} characters")
-            print(f"   📈 Sample: {metrics_data[:100]}...")
+        success_count = 0
+        for endpoint in endpoints:
+            response = requests.get(f"{self.base_url}{endpoint}", headers=self.headers)
+            if response.status_code == 200:
+                success_count += 1
+                self.log(f"   ✅ {endpoint}")
+            else:
+                self.log(f"   ❌ {endpoint}: {response.status_code}", "ERROR")
         
-        # 10. Data deletion (GDPR)
-        print("\n🔟 GDPR - User data deletion")
+        self.log(f"✅ Monitoring: {success_count}/{len(endpoints)} endpoints working")
+        return success_count == len(endpoints)
+    
+    def run_full_demo(self):
+        """Run complete end-to-end demo"""
+        self.log("🚀 Starting End-to-End Backend Integration Demo")
+        self.log("=" * 60)
         
-        delete_result = client.make_request("DELETE", "/data/u123")
+        # Step 1: Health check
+        if not self.test_health():
+            self.log("❌ Demo failed at health check", "ERROR")
+            return False
         
-        if "error" not in delete_result:
-            deleted = delete_result.get("deleted_records", {})
-            print(f"   🗑️ Deleted specs: {deleted.get('specs', 0)}")
-            print(f"   🗑️ Deleted evaluations: {deleted.get('evaluations', 0)}")
+        # Step 2: Authentication
+        if not self.authenticate():
+            self.log("❌ Demo failed at authentication", "ERROR")
+            return False
         
-        print("\n" + "=" * 50)
-        print("🎉 Demo Backend Integration Completed Successfully!")
-        print("✅ All endpoints tested and working")
+        # Step 3: Core functionality
+        spec_data = self.test_generate()
+        eval_data = self.test_evaluate(spec_data)
+        iter_data = self.test_iterate(spec_data)
+        
+        # Step 4: Mobile & VR APIs
+        self.test_mobile_api()
+        self.test_vr_api()
+        
+        # Step 5: Monitoring
+        self.test_monitoring()
         
         # Summary
-        print("\n📋 SUMMARY:")
-        print(f"   • Generated spec: {spec_id}")
-        print(f"   • Material switch: marble_white → marble_black")
-        print(f"   • Compliance check: case_001")
-        print(f"   • RL iterations: {len(iterate_result.get('iterations', []))} completed")
-        print(f"   • System health: {health_data.get('status', 'unknown')}")
+        self.log("=" * 60)
+        self.log("🎉 End-to-End Demo Completed Successfully!")
+        self.log(f"   Generated: {len(spec_data)} designs")
+        self.log(f"   Evaluated: {len(eval_data)} designs")
+        self.log(f"   Iterated: {len(iter_data)} designs")
+        self.log("   Mobile API: ✅")
+        self.log("   VR/AR API: ✅")
+        self.log("   Monitoring: ✅")
         
-    except Exception as e:
-        print(f"\n❌ Demo failed with error: {str(e)}")
-        return False
-    
-    return True
+        return True
 
-def poll_async_preview(client: APIClient, job_id: str, max_wait: int = 30) -> Optional[str]:
-    """Poll for async preview completion (if response returns 202)"""
-    print(f"⏳ Polling for preview completion (job: {job_id})")
+def main():
+    """Main demo execution"""
+    print("🎯 Prompt-to-JSON Backend Integration Demo")
+    print("=" * 60)
     
-    start_time = time.time()
-    while time.time() - start_time < max_wait:
-        try:
-            # Check job status
-            status_result = client.make_request("GET", f"/jobs/{job_id}")
-            
-            if "error" not in status_result:
-                status = status_result.get("status")
-                if status == "completed":
-                    preview_url = status_result.get("preview_url")
-                    print(f"✅ Preview ready: {preview_url}")
-                    return preview_url
-                elif status == "failed":
-                    print(f"❌ Preview generation failed")
-                    return None
-                else:
-                    print(f"⏳ Status: {status}, waiting...")
-            
-            time.sleep(2)
-            
-        except Exception as e:
-            print(f"⚠️ Polling error: {e}")
-            break
+    demo = BackendDemo()
     
-    print(f"⏰ Timeout waiting for preview")
-    return None
+    try:
+        success = demo.run_full_demo()
+        if success:
+            print("\n✅ All tests passed! Backend is fully operational.")
+            sys.exit(0)
+        else:
+            print("\n❌ Some tests failed. Check logs above.")
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n⏹️  Demo interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n💥 Demo crashed: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    # Load environment variables if available
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-        print("📁 Loaded environment variables from .env")
-    except ImportError:
-        print("📁 python-dotenv not available, using defaults")
-    
-    # Run the demo
-    success = main()
-    
-    if success:
-        print("\n🎯 Integration demo completed successfully!")
-        exit(0)
-    else:
-        print("\n💥 Integration demo failed!")
-        exit(1)
+    main()

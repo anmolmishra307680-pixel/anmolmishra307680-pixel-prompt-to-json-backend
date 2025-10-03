@@ -1,130 +1,189 @@
 # Compute Routing Configuration
 
 ## Overview
-Intelligent routing between local RTX-3060 and Yotta cloud based on complexity analysis.
+Intelligent routing between local RTX-3060 GPU and Yotta cloud based on complexity and cost optimization.
 
 ## Routing Logic
 
-### Complexity Calculation
+### Complexity Scoring (0.0 - 1.0)
 ```python
-complexity = len(prompt.split())  # Base word count
-complexity += len(str(context)) // 10  # Context bonus
-complexity += 20 * keyword_matches  # Keyword multipliers
+def calculate_complexity(prompt, spec_data=None):
+    score = 0.0
+    
+    # Prompt complexity
+    if len(prompt.split()) > 20: score += 0.2
+    if any(word in prompt.lower() for word in ["complex", "advanced", "detailed"]): score += 0.3
+    
+    # Design type complexity
+    complexity_weights = {
+        "electronics": 0.4,
+        "vehicle": 0.6,
+        "building": 0.7,
+        "appliance": 0.3,
+        "furniture": 0.2
+    }
+    
+    # Performance requirements
+    if spec_data and "performance" in spec_data:
+        perf = spec_data["performance"]
+        if perf.get("power", 0) > 1000: score += 0.2
+        if perf.get("efficiency", 0) > 0.9: score += 0.1
+    
+    return min(score, 1.0)
 ```
 
-### Keywords Adding Complexity (+20 each)
-- "detailed"
-- "complex" 
-- "advanced"
-- "comprehensive"
+### Routing Decision Matrix
 
-### Routing Decision
-```
-if complexity < COMPLEXITY_THRESHOLD:
-    → Local RTX-3060 ($0.001/token)
-else:
-    → Yotta Cloud ($0.01/token)
-    → Fallback to Local on failure
+| Complexity Score | Compute Target | Reasoning |
+|-----------------|----------------|-----------|
+| 0.0 - 0.3 | Local RTX-3060 | Simple designs, fast local processing |
+| 0.3 - 0.6 | Hybrid (prefer local) | Medium complexity, cost-effective |
+| 0.6 - 1.0 | Yotta Cloud | Complex designs, need cloud power |
+
+## Cost Analysis
+
+### Local RTX-3060 Costs
+- **Hardware**: $400 one-time cost
+- **Power**: ~220W @ $0.12/kWh = $0.026/hour
+- **Token Cost**: $0.0001/token (amortized)
+- **Latency**: 50-200ms
+- **Availability**: 24/7 (when system running)
+
+### Yotta Cloud Costs
+- **Compute**: $0.50/hour for GPU instances
+- **Token Cost**: $0.002/token
+- **Latency**: 200-500ms (network overhead)
+- **Availability**: 99.9% SLA
+- **Scaling**: Auto-scale to demand
+
+### Cost Optimization
+```python
+def calculate_cost_savings():
+    local_cost_per_token = 0.0001
+    cloud_cost_per_token = 0.002
+    
+    savings_per_token = cloud_cost_per_token - local_cost_per_token
+    savings_percentage = (savings_per_token / cloud_cost_per_token) * 100
+    
+    return {
+        "savings_per_token": savings_per_token,  # $0.0019
+        "savings_percentage": savings_percentage,  # 95%
+        "break_even_tokens": 400 / savings_per_token  # ~210,526 tokens
+    }
 ```
 
 ## Configuration
 
 ### Environment Variables
 ```bash
-COMPLEXITY_THRESHOLD=100
-YOTTA_URL=http://yotta-service:8000
-LOCAL_COST_PER_TOKEN=0.001
-YOTTA_COST_PER_TOKEN=0.01
+# Compute Routing
+ENABLE_LOCAL_GPU=true
+LOCAL_GPU_TYPE=rtx3060
+LOCAL_GPU_MEMORY=12GB
+COMPLEXITY_THRESHOLD_LOCAL=0.3
+COMPLEXITY_THRESHOLD_CLOUD=0.6
+
+# Yotta Cloud
+YOTTA_API_KEY=your-yotta-api-key
+YOTTA_ENDPOINT=https://api.yotta.com/v1
+YOTTA_MODEL=gpt-4-turbo
+YOTTA_MAX_TOKENS=4096
+
+# Fallback Strategy
+FALLBACK_TO_CLOUD=true
+LOCAL_TIMEOUT_SECONDS=30
+CLOUD_TIMEOUT_SECONDS=60
 ```
 
-### Threshold Guidelines
-- **< 50**: Simple prompts (local only)
-- **50-100**: Medium complexity (configurable)
-- **> 100**: Complex prompts (cloud preferred)
+### Routing Rules
+```python
+class ComputeRouter:
+    def route_request(self, prompt, spec_data=None):
+        complexity = self.calculate_complexity(prompt, spec_data)
+        
+        # Force cloud for specific keywords
+        cloud_keywords = ["enterprise", "production", "large-scale"]
+        if any(kw in prompt.lower() for kw in cloud_keywords):
+            return "yotta_cloud"
+        
+        # Route based on complexity
+        if complexity < 0.3:
+            return "local_rtx3060"
+        elif complexity < 0.6:
+            return "local_rtx3060" if self.local_available() else "yotta_cloud"
+        else:
+            return "yotta_cloud"
+    
+    def local_available(self):
+        # Check GPU availability, memory, temperature
+        return self.gpu_monitor.is_healthy()
+```
 
-## Usage Logs
+## Monitoring & Metrics
 
-### Job Logging Format
-```json
+### Performance Tracking
+```python
 {
-  "timestamp": "2024-01-15T10:30:00Z",
-  "job_type": "generation_v2",
-  "complexity": 45,
-  "compute_type": "local_rtx3060",
-  "cost": 0.045
+    "compute_stats": {
+        "local_requests": 1250,
+        "cloud_requests": 340,
+        "local_avg_latency": 120,
+        "cloud_avg_latency": 380,
+        "local_success_rate": 0.98,
+        "cloud_success_rate": 0.995
+    },
+    "cost_tracking": {
+        "local_cost_today": 2.45,
+        "cloud_cost_today": 15.80,
+        "total_savings": 68.50,
+        "savings_percentage": 87.2
+    }
 }
 ```
 
-### Log Files
-- **Location**: `logs/compute_jobs.json`
-- **Retention**: 30 days default
-- **Format**: JSON array of job entries
+### Health Checks
+- **GPU Temperature**: < 80°C
+- **GPU Memory**: < 90% utilization
+- **GPU Utilization**: Monitor for overload
+- **Cloud API**: Response time < 1s
+- **Network**: Latency to Yotta < 200ms
 
-## Monitoring
+## Fallback Strategies
 
-### Metrics Available
-```bash
-# Get compute statistics
-curl http://localhost:8000/api/v1/metrics/detailed \
-  -H "X-API-Key: bhiv-secret-key-2024" \
-  -H "Authorization: Bearer <token>"
-```
+### Local GPU Failure
+1. **Immediate**: Route to Yotta cloud
+2. **Notification**: Alert admin of GPU issues
+3. **Recovery**: Auto-retry local after cooldown
+4. **Logging**: Track failure patterns
 
-### Key Metrics
-- `total_jobs`: Total compute jobs processed
-- `total_cost`: Cumulative compute costs
-- `local_jobs`: Jobs processed locally
-- `yotta_jobs`: Jobs routed to cloud
-- `avg_complexity`: Average complexity score
+### Cloud API Failure
+1. **Retry**: 3 attempts with exponential backoff
+2. **Fallback**: Use local GPU regardless of complexity
+3. **Degraded Mode**: Simplified processing
+4. **User Notification**: Inform of potential delays
 
-## Cost Analysis
+### Network Issues
+1. **Local Priority**: Route everything to local GPU
+2. **Queue Management**: Buffer requests during outage
+3. **Batch Processing**: Process queued requests when online
+4. **Status Page**: Update system status
 
-### Local RTX-3060
-- **Cost**: $0.001 per token
-- **Latency**: ~100ms
-- **Capacity**: 1000 jobs/hour
-- **Best For**: Simple to medium complexity
+## Optimization Recommendations
 
-### Yotta Cloud
-- **Cost**: $0.01 per token (10x more expensive)
-- **Latency**: ~500ms
-- **Capacity**: Unlimited
-- **Best For**: Complex, resource-intensive tasks
+### Daily Operations
+- Monitor GPU temperature and performance
+- Track cost savings vs cloud-only approach
+- Analyze complexity scoring accuracy
+- Review routing decisions for optimization
 
-### Cost Optimization
-1. **Tune Threshold**: Adjust based on cost/performance needs
-2. **Monitor Usage**: Track cost trends
-3. **Batch Processing**: Group similar complexity jobs
+### Weekly Reviews
+- Analyze cost trends and savings
+- Review complexity threshold effectiveness
+- Check for routing pattern changes
+- Update cloud vs local performance metrics
 
-## Troubleshooting
-
-### Common Issues
-1. **High Costs**: Lower complexity threshold
-2. **Slow Performance**: Increase threshold for more cloud usage
-3. **Cloud Failures**: Check Yotta service availability
-
-### Debug Commands
-```bash
-# Check routing decision
-python -c "
-from src.compute_router import compute_router
-complexity = compute_router._calculate_complexity('your prompt here')
-print(f'Complexity: {complexity}')
-print(f'Route: {'local' if complexity < 100 else 'cloud'}')
-"
-
-# View job logs
-cat logs/compute_jobs.json | jq '.[-10:]'  # Last 10 jobs
-```
-
-## Performance Tuning
-
-### Threshold Optimization
-- **Start**: 100 (default)
-- **Monitor**: Cost vs performance
-- **Adjust**: Based on usage patterns
-
-### Batch Processing
-- Group similar prompts
-- Process during off-peak hours
-- Use local for development/testing
+### Monthly Planning
+- Evaluate hardware upgrade needs
+- Review cloud provider pricing changes
+- Optimize complexity scoring algorithm
+- Plan capacity for growth

@@ -49,6 +49,8 @@ from src.services.preview_manager import preview_manager
 from src.services.frontend_integration import frontend_integration
 from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
 from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
+from src.api.react_native_bridge import router as react_native_router
+from src.api.vr_ar_bridge import router as vr_ar_router
 
 from fastapi.security import HTTPBearer
 
@@ -102,9 +104,15 @@ app = FastAPI(
     openapi_tags=[
         {"name": "Authentication", "description": "JWT token and API key authentication"},
         {"name": "AI Agents", "description": "AI specification generation and evaluation"},
-        {"name": "Monitoring", "description": "Health checks and system metrics"}
+        {"name": "Monitoring", "description": "Health checks and system metrics"},
+        {"name": "Mobile", "description": "React Native mobile integration"},
+        {"name": "VR/AR", "description": "Virtual and Augmented Reality platforms"}
     ]
 )
+
+# Include new routers
+app.include_router(react_native_router)
+app.include_router(vr_ar_router)
 
 # Register structured exception handlers
 from pydantic import ValidationError
