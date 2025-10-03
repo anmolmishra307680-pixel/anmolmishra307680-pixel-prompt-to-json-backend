@@ -354,14 +354,20 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
     try:
         # Get old access token from Authorization header if present
         auth_header = request.headers.get("Authorization")
+        print(f"[DEBUG] Refresh called with auth header: {auth_header[:50] if auth_header else 'None'}...")
+        
         if auth_header and auth_header.startswith("Bearer "):
             old_access_token = auth_header[7:]
             # Blacklist the old access token
-            jwt_auth.blacklist_token(old_access_token)
+            blacklisted = jwt_auth.blacklist_token(old_access_token)
+            print(f"[DEBUG] Blacklisted old access token: {blacklisted}")
         
         tokens = jwt_auth.refresh_access_token(refresh_data.refresh_token)
         if not tokens:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+        print(f"[DEBUG] New access token created: {tokens.access_token[:50]}...")
+        print(f"[DEBUG] Blacklist size: {len(jwt_auth.blacklisted_tokens)}")
         
         system_monitor.increment_requests()
         return tokens.model_dump()

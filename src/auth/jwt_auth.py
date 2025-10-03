@@ -73,6 +73,7 @@ class JWTAuth:
             # Check if token is blacklisted
             jti = payload.get("jti")
             if jti and jti in self.blacklisted_tokens:
+                print(f"[DEBUG] Token {jti} is blacklisted")
                 return None
                 
             return payload
@@ -92,6 +93,7 @@ class JWTAuth:
         if old_jti:
             self.blacklisted_tokens.add(old_jti)
             self._save_blacklist()
+            print(f"[DEBUG] Blacklisted refresh token JTI: {old_jti}")
         
         return self.create_tokens({"username": payload["sub"]})
 
