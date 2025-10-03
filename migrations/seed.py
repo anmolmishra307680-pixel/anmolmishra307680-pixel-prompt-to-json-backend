@@ -12,30 +12,27 @@ def seed_database():
         db = Database()
         session = db.get_session()
         
-        from data.models import Specs
+        from data.models import Spec
         
-        seed_spec = Specs(
-            spec_id="spec_seed",
-            user_id="u0", 
+        seed_spec = Spec(
             prompt="seed",
-            spec_json={},
-            agent_type="MainAgent",
-            created_at=datetime.now(timezone.utc)
+            spec_data={},
+            agent_type="MainAgent"
         )
         
-        existing = session.query(Specs).filter_by(spec_id="spec_seed").first()
+        existing = session.query(Spec).filter_by(id="spec_seed").first()
         if not existing:
             session.add(seed_spec)
             session.commit()
-            print("✅ Seed data added")
+            print("Seed data added")
         else:
-            print("⏭️ Seed data already exists")
+            print("Seed data already exists")
             
         session.close()
         return True
         
     except Exception as e:
-        print(f"❌ Seeding failed: {e}")
+        print(f"Seeding failed: {e}")
         return False
 
 if __name__ == "__main__":
