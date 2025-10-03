@@ -41,7 +41,17 @@ class Database:
             print("[INFO] Using Supabase PostgreSQL database")
         else:
             print("[INFO] Using SQLite database")
-        self.engine = create_engine(self.database_url)
+        # Add connection pool settings for Supabase
+        if 'postgresql' in self.database_url:
+            self.engine = create_engine(
+                self.database_url,
+                pool_size=5,
+                max_overflow=10,
+                pool_pre_ping=True,
+                pool_recycle=300
+            )
+        else:
+            self.engine = create_engine(self.database_url)
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.create_tables()
 
@@ -58,36 +68,44 @@ class Database:
 
     def save_spec(self, prompt: str, spec_data: Dict[Any, Any], agent_type: str = 'MainAgent') -> str:
         """Save specification to database"""
+        session = None
         try:
-            with self.get_session() as session:
-                spec = Spec(
-                    prompt=prompt,
-                    spec_data=spec_data,
-                    agent_type=agent_type
-                )
-                session.add(spec)
-                session.commit()
-                return spec.id
+            session = self.get_session()
+            spec = Spec(
+                prompt=prompt,
+                spec_data=spec_data,
+                agent_type=agent_type
+            )
+            session.add(spec)
+            session.commit()
+            return spec.id
         except Exception as e:
             print(f"DB save failed, using fallback: {e}")
             return self._fallback_save_spec(prompt, spec_data)
+        finally:
+            if session:
+                session.close()
 
     def save_eval(self, spec_id: str, prompt: str, eval_data: Dict[Any, Any], score: float) -> str:
         """Save evaluation to database"""
+        session = None
         try:
-            with self.get_session() as session:
-                eval_record = Eval(
-                    spec_id=spec_id,
-                    prompt=prompt,
-                    eval_data=eval_data,
-                    score=score
-                )
-                session.add(eval_record)
-                session.commit()
-                return eval_record.id
+            session = self.get_session()
+            eval_record = Eval(
+                spec_id=spec_id,
+                prompt=prompt,
+                eval_data=eval_data,
+                score=score
+            )
+            session.add(eval_record)
+            session.commit()
+            return eval_record.id
         except Exception as e:
             print(f"DB save failed, using fallback: {e}")
             return self._fallback_save_eval(spec_id, prompt, eval_data, score)
+        finally:
+            if session:
+                session.close()
 
     def save_feedback(self, spec_id: str, iteration: int, feedback_data: Dict[Any, Any], reward: float = None) -> str:
         """Save feedback to database"""

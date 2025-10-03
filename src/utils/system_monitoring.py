@@ -61,6 +61,8 @@ class SystemMonitor:
             from src.data.database import Database
             db = Database()
             session = db.get_session()
+            # Simple query to test connection
+            session.execute("SELECT 1")
             session.close()
             db_status = "healthy"
         except Exception:
