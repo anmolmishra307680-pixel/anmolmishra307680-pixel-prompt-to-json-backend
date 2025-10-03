@@ -25,15 +25,22 @@ class JWTAuth:
         self.algorithm = "HS256"
         self.access_token_expire = 15  # 15 minutes
         self.refresh_token_expire = 7 * 24 * 60  # 7 days in minutes
+        self.blacklisted_tokens = set()  # Store blacklisted token IDs
         
     def create_tokens(self, user_data: Dict[str, Any]) -> TokenResponse:
         """Create access and refresh tokens"""
+        import uuid
         now = datetime.now(timezone.utc)
+        
+        # Generate unique token IDs
+        access_jti = str(uuid.uuid4())
+        refresh_jti = str(uuid.uuid4())
         
         # Access token
         access_payload = {
             "sub": user_data["username"],
             "type": "access",
+            "jti": access_jti,
             "iat": now,
             "exp": now + timedelta(minutes=self.access_token_expire)
         }
@@ -43,6 +50,7 @@ class JWTAuth:
         refresh_payload = {
             "sub": user_data["username"],
             "type": "refresh",
+            "jti": refresh_jti,
             "iat": now,
             "exp": now + timedelta(minutes=self.refresh_token_expire)
         }
@@ -60,6 +68,12 @@ class JWTAuth:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             if payload.get("type") != token_type:
                 return None
+            
+            # Check if token is blacklisted
+            jti = payload.get("jti")
+            if jti and jti in self.blacklisted_tokens:
+                return None
+                
             return payload
         except jwt.ExpiredSignatureError:
             return None
@@ -72,7 +86,24 @@ class JWTAuth:
         if not payload:
             return None
         
+        # Blacklist the old refresh token
+        old_jti = payload.get("jti")
+        if old_jti:
+            self.blacklisted_tokens.add(old_jti)
+        
         return self.create_tokens({"username": payload["sub"]})
+
+    def blacklist_token(self, token: str) -> bool:
+        """Manually blacklist a token"""
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm], options={"verify_exp": False})
+            jti = payload.get("jti")
+            if jti:
+                self.blacklisted_tokens.add(jti)
+                return True
+        except jwt.InvalidTokenError:
+            pass
+        return False
 
 # Global instance
 jwt_auth = JWTAuth()

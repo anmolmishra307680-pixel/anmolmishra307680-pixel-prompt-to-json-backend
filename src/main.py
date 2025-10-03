@@ -352,6 +352,13 @@ async def login_v2(request: Request, login_data: LoginRequest, api_key: str = De
 async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key: str = Depends(verify_api_key)):
     """Refresh access token"""
     try:
+        # Get old access token from Authorization header if present
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            old_access_token = auth_header[7:]
+            # Blacklist the old access token
+            jwt_auth.blacklist_token(old_access_token)
+        
         tokens = jwt_auth.refresh_access_token(refresh_data.refresh_token)
         if not tokens:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
