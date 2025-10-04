@@ -1718,15 +1718,15 @@ async def serve_local_preview(request: Request, object_key: str, expires: int, s
     """Serve local preview files with signature verification"""
     try:
         # Storage fallback for production
-try:
-    from src.storage.bucket_storage import bucket_storage
-except ImportError:
-    # Fallback storage for production
-    class FallbackStorage:
-        def store_file(self, *args): return "/fallback/storage"
-        def get_signed_url(self, *args): return "/fallback/url"
-        def verify_signed_url(self, *args): return True
-    bucket_storage = FallbackStorage()
+        try:
+            from src.storage.bucket_storage import bucket_storage
+        except ImportError:
+            # Fallback storage for production
+            class FallbackStorage:
+                def store_file(self, *args): return "/fallback/storage"
+                def get_signed_url(self, *args): return "/fallback/url"
+                def verify_signed_url(self, *args): return True
+            bucket_storage = FallbackStorage()
         
         # Verify signature
         if not bucket_storage.verify_signed_url(object_key, expires, signature):

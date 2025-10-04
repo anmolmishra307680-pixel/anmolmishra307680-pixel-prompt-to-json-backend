@@ -1,5 +1,8 @@
 """Redis caching system with in-memory fallback"""
-import redis
+try:
+    import redis
+except ImportError:
+    redis = None
 import json
 import hashlib
 import os
@@ -14,7 +17,7 @@ class CacheManager:
         self._cache_stats = {"hits": 0, "misses": 0, "sets": 0}
 
         # Skip Redis in development - use memory cache only
-        if os.getenv("REDIS_ENABLED", "false").lower() == "true":
+        if redis and os.getenv("REDIS_ENABLED", "false").lower() == "true":
             try:
                 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
                 self.redis_client = redis.from_url(
