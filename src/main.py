@@ -1,5 +1,24 @@
 """FastAPI Backend for Prompt-to-JSON System"""
 
+# Load environment variables first
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env file if it exists
+env_file = Path("config/.env")
+if env_file.exists():
+    load_dotenv(env_file)
+    print(f"[ENV] Loaded environment from: {env_file}")
+else:
+    # Try alternative locations
+    for env_path in [Path(".env"), Path("../.env")]:
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"[ENV] Loaded environment from: {env_path}")
+            break
+    else:
+        print("[ENV] No .env file found, using system environment variables")
+
 # Fix Unicode encoding for Windows
 import sys
 import os
@@ -197,8 +216,8 @@ def custom_openapi():
                         if param.get("name") not in ["authorization", "Authorization", "X-API-Key"]
                     ]
 
-                if path == "/health":
-                    # Health endpoint is public for monitoring
+                if path in ["/health", "/", "/metrics"]:
+                    # Public endpoints for monitoring
                     operation["security"] = []
                 elif path in ["/api/v1/auth/login", "/api/v1/auth/refresh"]:
                     # Auth endpoints only need API key
@@ -442,8 +461,8 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
 
 @app.api_route("/", methods=["GET", "HEAD"], tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def root(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Root endpoint - supports both GET and HEAD requests"""
+async def root(request: Request):
+    """Root endpoint - supports both GET and HEAD requests (public for health checks)"""
     print(f"[INFO] Root endpoint accessed: {request.method} from {request.client.host if request.client else 'unknown'}")
     
     response_data = {

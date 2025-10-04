@@ -14,19 +14,31 @@ services:
       - key: PRODUCTION_MODE
         value: true
       - key: LOCAL_GPU_ENABLED
-        value: false
+        value: true
       - key: COMPUTE_STRATEGY
-        value: cloud_only
+        value: hybrid
       - key: YOTTA_API_KEY
-        sync: false
+        value: bhiv-yotta-production-key-2024
       - key: YOTTA_ENDPOINT
         value: https://api.yotta.com/v1/inference
       - key: BURST_THRESHOLD
-        value: 0.3
+        value: 0.6
       - key: BHIV_BUCKET_ENABLED
         value: true
+      - key: BHIV_BUCKET_NAME
+        value: bhiv-production-storage
+      - key: BHIV_ACCESS_KEY
+        value: BHIV_PROD_ACCESS_KEY_2024
+      - key: BHIV_SECRET_KEY
+        value: bhiv-secret-storage-key-2024-production
+      - key: BHIV_ENDPOINT
+        value: https://storage.bhiv.ai
+      - key: BHIV_REGION
+        value: us-east-1
       - key: REDIS_URL
-        value: disabled
+        value: redis://redis-bhiv-production.render.com:6379
+      - key: PYTORCH_AVAILABLE
+        value: true
       - key: API_KEY
         value: bhiv-secret-key-2024
       - key: JWT_SECRET

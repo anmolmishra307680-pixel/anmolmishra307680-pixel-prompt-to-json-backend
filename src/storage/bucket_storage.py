@@ -21,12 +21,19 @@ class BHIVBucketStorage:
         self.endpoint = os.getenv("BHIV_ENDPOINT", "https://storage.bhiv.ai")
         self.region = os.getenv("BHIV_REGION", "us-east-1")
         
-        # Fallback to local storage if bucket not configured
-        self.use_local = not (self.access_key and self.secret_key)
+        # Check if bucket is enabled and configured
+        bucket_enabled = os.getenv("BHIV_BUCKET_ENABLED", "false").lower() == "true"
+        self.use_local = not (bucket_enabled and self.access_key and self.secret_key)
+        
         if self.use_local:
-            print("[INFO] BHIV Bucket not configured, using local storage fallback")
+            if not bucket_enabled:
+                print("[INFO] BHIV Bucket disabled, using local storage")
+            else:
+                print("[INFO] BHIV Bucket not configured, using local storage fallback")
             self.local_storage = Path("preview_storage")
             self.local_storage.mkdir(exist_ok=True)
+        else:
+            print(f"[OK] BHIV Bucket configured: {self.bucket_name} at {self.endpoint}")
     
     def generate_signed_url(self, object_key: str, expires_in: int = 3600) -> str:
         """Generate signed URL for object access"""
@@ -84,15 +91,20 @@ class BHIVBucketStorage:
             
             headers = {
                 "Content-Type": content_type,
-                "Authorization": self._generate_auth_header("PUT", object_key)
+                "Authorization": self._generate_auth_header("PUT", object_key),
+                "x-amz-acl": "private"
             }
             
-            async with httpx.AsyncClient() as client:
+            print(f"[BHIV] Uploading to bucket: {upload_url}")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.put(upload_url, content=preview_data, headers=headers)
                 response.raise_for_status()
+                print(f"[BHIV] Upload successful: {response.status_code}")
             
             # Generate signed URL for access
             signed_url = self.generate_signed_url(object_key, expires_in=86400)  # 24 hours
+            print(f"[BHIV] Generated signed URL: {signed_url[:50]}...")
             return signed_url
             
         except Exception as e:
