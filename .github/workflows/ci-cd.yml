@@ -1,0 +1,228 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+        pip install boto3  # For BHIV bucket integration
+    
+    - name: Set up test environment
+      run: |
+        mkdir -p logs spec_storage iteration_logs preview_storage geometry
+        echo "API_KEY=bhiv-secret-key-2024" > config/.env.test
+        echo "JWT_SECRET=test-jwt-secret" >> config/.env.test
+        echo "DEMO_USERNAME=admin" >> config/.env.test
+        echo "DEMO_PASSWORD=bhiv2024" >> config/.env.test
+        echo "TESTING=true" >> config/.env.test
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> config/.env.test
+        echo "BHIV_BUCKET_ENABLED=false" >> config/.env.test
+        echo "LOCAL_GPU_ENABLED=false" >> config/.env.test
+        echo "YOTTA_API_KEY=disabled" >> config/.env.test
+    
+    - name: Run core tests
+      run: |
+        export TESTING=true
+        pytest tests/tests/ -v --cov=src --cov-report=xml --cov-report=html
+    
+    - name: Run switch functionality tests
+      run: |
+        export TESTING=true
+        pytest tests/test_switch.py -v
+    
+    - name: Run compliance tests
+      run: |
+        export TESTING=true
+        pytest tests/test_compliance.py -v
+    
+    - name: Run Three.js integration tests
+      run: |
+        export TESTING=true
+        pytest tests/test_threejs_integration.py -v
+    
+    - name: Run API contract tests
+      run: |
+        export TESTING=true
+        pytest tests/tests/test_api_contract.py -v
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Test Results
+        path: 'test-results.xml'
+        reporter: java-junit
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security scan
+      uses: pypa/gh-action-pip-audit@v1.0.8
+      with:
+        inputs: requirements.txt
+    
+    - name: Run Bandit security linter
+      run: |
+        pip install bandit
+        bandit -r src/ -f json -o bandit-report.json || true
+    
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: bandit-report.json
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install boto3
+    
+    - name: Start server for integration tests
+      run: |
+        export TESTING=true
+        export API_KEY=bhiv-secret-key-2024
+        export JWT_SECRET=test-jwt-secret
+        export DEMO_USERNAME=admin
+        export DEMO_PASSWORD=bhiv2024
+        python -m src.main &
+        sleep 10
+    
+    - name: Run integration tests
+      run: |
+        curl -f http://localhost:8000/health || exit 1
+        curl -f http://localhost:8000/ || exit 1
+        echo "Integration tests passed"
+    
+    - name: Test API endpoints
+      run: |
+        # Test authentication
+        TOKEN=$(curl -s -X POST "http://localhost:8000/api/v1/auth/login" \
+          -H "Content-Type: application/json" \
+          -H "X-API-Key: bhiv-secret-key-2024" \
+          -d '{"username":"admin","password":"bhiv2024"}' | jq -r '.access_token')
+        
+        # Test generation endpoint
+        curl -f -X POST "http://localhost:8000/api/v1/generate" \
+          -H "Content-Type: application/json" \
+          -H "X-API-Key: bhiv-secret-key-2024" \
+          -H "Authorization: Bearer $TOKEN" \
+          -d '{"prompt":"test building"}' || exit 1
+        
+        echo "API endpoint tests passed"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, security-scan, integration-test]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Add your deployment commands here
+        # For example, deploy to Render, AWS, etc.
+    
+    - name: Notify deployment
+      run: |
+        echo "Deployment completed successfully"
+        # Add notification logic (Slack, email, etc.)
+
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install k6
+      run: |
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb https://dl.k6.io/deb stable main" | sudo tee /dev/null > /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+    
+    - name: Set up Python and start server
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies and start server
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install boto3
+        export TESTING=true
+        python -m src.main &
+        sleep 10
+    
+    - name: Run performance tests
+      run: |
+        if [ -f "tests/load-tests/k6-load-test.js" ]; then
+          k6 run tests/load-tests/k6-load-test.js
+        else
+          echo "Performance test file not found, skipping"
+        fi

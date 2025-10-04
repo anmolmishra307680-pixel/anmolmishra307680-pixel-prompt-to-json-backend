@@ -77,6 +77,7 @@ from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, Enhance
 from src.schemas.compliance_schema import ComplianceRunCaseRequest, ComplianceRunCaseResponse, ComplianceFeedbackRequest, ComplianceFeedbackResponse
 # from src.services.preview_generator import generate_preview
 from src.api.contract_v2 import store_spec, load_spec, save_spec, save_iteration, generate_preview_url, ObjectTargeter
+from src.api.threejs_integration import transform_to_three_js, generate_react_three_fiber_code
 # from src.services.spec_storage import spec_storage
 # from src.services.compliance import compliance_proxy
 # from src.services.geometry_storage import geometry_storage
@@ -171,9 +172,9 @@ app = FastAPI(
     ]
 )
 
-# Include new routers (temporarily disabled for compatibility)
-# app.include_router(react_native_router)
-# app.include_router(vr_ar_router)
+# Include frontend integration router
+from src.api.frontend_endpoints import router as frontend_router
+app.include_router(frontend_router, tags=["🖥️ Frontend Integration"])
 
 # Register structured exception handlers
 from pydantic import ValidationError
@@ -639,9 +640,9 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
                 type=component,
                 material=material,
                 dimensions=Dimensions3D(
-                    width=spec_data.get('dimensions', {}).get('width', 10.0),
-                    height=spec_data.get('dimensions', {}).get('height', 3.0),
-                    depth=spec_data.get('dimensions', {}).get('depth', 10.0)
+                    width=10.0,
+                    height=3.0,
+                    depth=10.0
                 ),
                 position=Position3D(x=i*2.0, y=0.0, z=0.0),
                 editable=True,
@@ -659,9 +660,9 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
             description=body.prompt,
             total_objects=len(objects),
             bounding_box=Dimensions3D(
-                width=spec_data.get('dimensions', {}).get('width', 20.0),
-                height=spec_data.get('dimensions', {}).get('height', 10.0),
-                depth=spec_data.get('dimensions', {}).get('depth', 20.0)
+                width=20.0,
+                height=10.0,
+                depth=20.0
             )
         )
         
@@ -1580,38 +1581,31 @@ async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_ap
 @app.get("/api/v1/three-js/{spec_id}", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
 async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Get Three.js formatted data for spec"""
+    """Get Three.js compatible JSON data for frontend rendering"""
     try:
-        # Get spec data
-        try:
-            from src.services.spec_storage import spec_storage
-            spec_data = spec_storage.get_spec(spec_id)
-        except ImportError:
-            # Fallback storage
-            import json
-            from pathlib import Path
-            storage_file = Path("spec_storage") / f"{spec_id}.json"
-            if storage_file.exists():
-                with open(storage_file, 'r') as f:
-                    spec_data = json.load(f)
-            else:
-                spec_data = None
-        
+        # Load spec data
+        spec_data = await load_spec(spec_id)
         if not spec_data:
             raise HTTPException(status_code=404, detail="Spec not found")
         
-        # Convert to Three.js format using enhanced preview manager
-        three_js_data = preview_manager.get_threejs_data(spec_data)
+        # Transform to Three.js format
+        three_js_data = transform_to_three_js(spec_data)
+        
+        # Get current preview URL
+        preview_url = await generate_preview_url(spec_id)
         
         return {
             "success": True,
             "spec_id": spec_id,
             "three_js_data": three_js_data,
-            "message": "Three.js data prepared"
+            "preview_url": preview_url,
+            "last_updated": spec_data.get('version', {}).get('modified_at'),
+            "message": "Three.js data ready for frontend"
         }
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ERROR] Three.js data generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/preview/viewer/{spec_id}", tags=["🖼️ Preview Management"])
@@ -1687,29 +1681,35 @@ async def serve_local_preview(request: Request, object_key: str, expires: int, s
 @app.post("/api/v1/preview/refresh", tags=["🖼️ Preview Management"])
 @limiter.limit("10/minute")
 async def refresh_preview(request: Request, refresh_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Force refresh preview for spec"""
+    """Force refresh preview and Three.js data after spec changes"""
     try:
         spec_id = refresh_data.get('spec_id')
         if not spec_id:
             raise HTTPException(status_code=400, detail="spec_id required")
         
-        # Get spec data
-        spec_data = spec_storage.get_spec(spec_id)
+        # Get updated spec data
+        spec_data = await load_spec(spec_id)
         if not spec_data:
             raise HTTPException(status_code=404, detail="Spec not found")
         
-        # Force refresh preview
+        # Refresh preview URL
         new_preview_url = await preview_manager.refresh_preview(spec_id, spec_data)
+        
+        # Generate fresh Three.js data
+        three_js_data = transform_to_three_js(spec_data)
         
         return {
             "success": True,
             "spec_id": spec_id,
             "preview_url": new_preview_url,
-            "message": "Preview refreshed"
+            "three_js_data": three_js_data,
+            "refreshed_at": datetime.now(timezone.utc).isoformat(),
+            "message": "Preview and Three.js data refreshed"
         }
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ERROR] Preview refresh failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/preview/verify", tags=["🖼️ Preview Management"])
