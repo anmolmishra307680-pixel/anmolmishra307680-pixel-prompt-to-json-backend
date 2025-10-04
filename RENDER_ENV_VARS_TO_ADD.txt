@@ -1,0 +1,32 @@
+RENDER ENVIRONMENT VARIABLES TO ADD
+=====================================
+
+Copy and paste these into your Render dashboard:
+
+LOCAL_GPU_ENABLED=true
+COMPUTE_STRATEGY=hybrid
+YOTTA_API_KEY=bhiv-yotta-production-key-2024
+YOTTA_ENDPOINT=https://api.yotta.com/v1/inference
+BURST_THRESHOLD=0.6
+BHIV_BUCKET_ENABLED=true
+BHIV_BUCKET_NAME=bhiv-production-storage
+BHIV_ACCESS_KEY=BHIV_PROD_ACCESS_KEY_2024
+BHIV_SECRET_KEY=bhiv-secret-storage-key-2024-production
+BHIV_ENDPOINT=https://storage.bhiv.ai
+BHIV_REGION=us-east-1
+PYTORCH_AVAILABLE=true
+RENDER=true
+
+STEPS TO ADD:
+1. Go to Render dashboard
+2. Select your service
+3. Go to Environment tab
+4. Add each variable above
+5. Click "Save Changes"
+6. Redeploy
+
+After adding these, your deployment logs should show:
+✅ Local GPU: True
+✅ Yotta: True  
+✅ BHIV Bucket: Configured
+✅ Hybrid compute strategy: Active

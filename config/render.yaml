@@ -39,6 +39,8 @@ services:
         value: redis://redis-bhiv-production.render.com:6379
       - key: PYTORCH_AVAILABLE
         value: true
+      - key: RENDER
+        value: true
       - key: API_KEY
         value: bhiv-secret-key-2024
       - key: JWT_SECRET

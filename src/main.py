@@ -1,27 +1,31 @@
 """FastAPI Backend for Prompt-to-JSON System"""
 
-# Load environment variables first
+# Load environment variables with proper priority
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
-# Load .env file if it exists
-env_file = Path("config/.env")
-if env_file.exists():
-    load_dotenv(env_file)
-    print(f"[ENV] Loaded environment from: {env_file}")
+# Check if we're in production (Render sets this)
+if os.getenv("PRODUCTION_MODE") == "true" or os.getenv("RENDER"):
+    print("[ENV] Production mode: using system environment variables")
 else:
-    # Try alternative locations
-    for env_path in [Path(".env"), Path("../.env")]:
-        if env_path.exists():
-            load_dotenv(env_path)
-            print(f"[ENV] Loaded environment from: {env_path}")
-            break
+    # Development mode: try to load .env file
+    env_file = Path("config/.env")
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"[ENV] Development mode: loaded from {env_file}")
     else:
-        print("[ENV] No .env file found, using system environment variables")
+        # Try alternative locations
+        for env_path in [Path(".env"), Path("../.env")]:
+            if env_path.exists():
+                load_dotenv(env_path)
+                print(f"[ENV] Development mode: loaded from {env_path}")
+                break
+        else:
+            print("[ENV] No .env file found, using system environment variables")
 
 # Fix Unicode encoding for Windows
 import sys
-import os
 if sys.platform.startswith('win'):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
