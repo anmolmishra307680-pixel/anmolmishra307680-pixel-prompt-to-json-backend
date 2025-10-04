@@ -216,24 +216,6 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-# Lifespan event handler (replaces deprecated on_event)
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    print(f"[STARTUP] Prompt-to-JSON API v{API_VERSION} starting up...")
-    print(f"[STARTUP] Environment: {'Production' if os.getenv('PRODUCTION_MODE') == 'true' else 'Development'}")
-    print(f"[STARTUP] Database: {'Supabase PostgreSQL' if hasattr(db, 'supabase_client') else 'SQLite Fallback'}")
-    print(f"[STARTUP] Agents initialized: {len([a for a in [prompt_agent, evaluator_agent, rl_agent] if hasattr(a, 'run')])}")
-    print(f"[STARTUP] Server ready to accept requests")
-    
-    yield
-    
-    # Shutdown
-    print(f"[SHUTDOWN] Prompt-to-JSON API v{API_VERSION} shutting down...")
-    print(f"[SHUTDOWN] Cleanup completed")
-
 # Rate limiter with slowapi
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
