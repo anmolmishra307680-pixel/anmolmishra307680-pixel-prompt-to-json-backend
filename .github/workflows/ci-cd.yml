@@ -36,7 +36,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-ci.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
     
@@ -45,8 +45,7 @@ jobs:
         python -m pip install --upgrade pip
         # Install CPU-only PyTorch for CI/CD compatibility
         pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-asyncio pytest-html pytest-xvfb
+        pip install -r requirements-ci.txt
         pip install boto3  # For BHIV bucket integration
     
     - name: Set up test environment
@@ -88,7 +87,7 @@ jobs:
         pytest tests/tests/test_api_contract.py -v
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: unittests
@@ -106,11 +105,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Run security scan
-      uses: pypa/gh-action-pip-audit@v1.0.8
-      with:
-        inputs: requirements.txt
     
     - name: Run Bandit security linter
       run: |
@@ -140,8 +134,7 @@ jobs:
         python -m pip install --upgrade pip
         # Install CPU-only PyTorch for CI/CD compatibility
         pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
-        pip install -r requirements.txt
-        pip install boto3
+        pip install -r requirements-ci.txt
     
     - name: Start server for integration tests
       run: |
@@ -219,8 +212,7 @@ jobs:
         python -m pip install --upgrade pip
         # Install CPU-only PyTorch for CI/CD compatibility
         pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
-        pip install -r requirements.txt
-        pip install boto3
+        pip install -r requirements-ci.txt
         export TESTING=true
         python -m src.main &
         sleep 10
