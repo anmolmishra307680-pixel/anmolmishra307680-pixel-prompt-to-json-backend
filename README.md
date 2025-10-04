@@ -76,7 +76,11 @@ source .venv/bin/activate
 
 ### 2. Install Dependencies
 ```bash
+# For CPU-only (CI/CD compatible)
 pip install -r requirements.txt
+
+# For local development with CUDA GPU (RTX-3050/3060)
+pip install -r requirements-cuda.txt --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ### 2. Install Dependencies
