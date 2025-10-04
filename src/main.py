@@ -463,24 +463,33 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.api_route("/", methods=["GET", "HEAD"], tags=["📊 System Monitoring"])
+@app.get("/", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def root(request: Request):
-    """Root endpoint - supports both GET and HEAD requests (public for health checks)"""
-    print(f"[INFO] Root endpoint accessed: {request.method} from {request.client.host if request.client else 'unknown'}")
+async def root_get(request: Request):
+    """Root endpoint - GET method returns API information"""
+    print(f"[INFO] Root GET from {request.client.host if request.client else 'unknown'}")
     
-    response_data = {
+    return {
         "message": "Prompt-to-JSON API",
         "version": API_VERSION,
         "status": "Production Ready",
         "features": ["AI Agents", "Multi-Agent Coordination", "RL Training", "JWT Authentication", "Monitoring"]
     }
+
+@app.head("/", tags=["📊 System Monitoring"])
+@limiter.limit("20/minute")
+async def root_head(request: Request):
+    """Root endpoint - HEAD method for health checks (no body)"""
+    print(f"[INFO] Root HEAD from {request.client.host if request.client else 'unknown'}")
     
-    # For HEAD requests, return empty body but same headers
-    if request.method == "HEAD":
-        return Response(status_code=200, headers={"Content-Type": "application/json"})
-    
-    return response_data
+    return Response(
+        status_code=200, 
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Version": API_VERSION,
+            "X-Status": "Production Ready"
+        }
+    )
 
 
 @app.get("/health", tags=["📊 System Monitoring"])
