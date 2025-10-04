@@ -46,7 +46,7 @@ jobs:
         # Install CPU-only PyTorch for CI/CD compatibility
         pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
         pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-asyncio
+        pip install pytest pytest-cov pytest-asyncio pytest-html pytest-xvfb
         pip install boto3  # For BHIV bucket integration
     
     - name: Set up test environment
@@ -65,7 +65,7 @@ jobs:
     - name: Run core tests
       run: |
         export TESTING=true
-        pytest tests/tests/ -v --cov=src --cov-report=xml --cov-report=html
+        pytest tests/tests/ -v --cov=src --cov-report=xml --cov-report=html --junitxml=test-results.xml
     
     - name: Run switch functionality tests
       run: |
@@ -96,7 +96,7 @@ jobs:
     
     - name: Test report
       uses: dorny/test-reporter@v1
-      if: success() || failure()
+      if: (success() || failure()) && hashFiles('test-results.xml') != ''
       with:
         name: Test Results
         path: 'test-results.xml'
