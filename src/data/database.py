@@ -16,20 +16,23 @@ from pathlib import Path
 config_path = Path(__file__).parent.parent.parent / "config" / ".env"
 load_dotenv(config_path)
 
-# Initialize Supabase client
+# Initialize Supabase client with better error handling
 try:
     from supabase import create_client, Client
     url: str = os.environ.get("SUPABASE_URL")
     key: str = os.environ.get("SUPABASE_KEY")
-    if url and key:
+    if url and key and url != "disabled" and key != "disabled":
         supabase: Client = create_client(url, key)
         print("[OK] Supabase client initialized")
     else:
         supabase = None
-        print("[WARN] Supabase credentials not found, using PostgreSQL only")
+        print("[INFO] Supabase disabled, using direct PostgreSQL connection")
 except ImportError:
     supabase = None
-    print("[WARN] Supabase library not installed, using PostgreSQL only")
+    print("[INFO] Supabase library not available, using direct PostgreSQL connection")
+except Exception as e:
+    supabase = None
+    print(f"[WARN] Supabase initialization failed: {e}, using PostgreSQL fallback")
 
 class Database:
     def __init__(self, database_url: str = None):
@@ -41,26 +44,31 @@ class Database:
             print("[INFO] Using Supabase PostgreSQL database")
         else:
             print("[INFO] Using SQLite database")
-        # Add connection pool settings for Supabase
+        # Enhanced connection pool settings for production
         if 'postgresql' in self.database_url:
             self.engine = create_engine(
                 self.database_url,
-                pool_size=5,
-                max_overflow=10,
+                pool_size=10,
+                max_overflow=20,
                 pool_pre_ping=True,
-                pool_recycle=300
+                pool_recycle=300,
+                connect_args={"sslmode": "require"} if os.getenv('PRODUCTION_MODE') == 'true' else {}
             )
         else:
             self.engine = create_engine(self.database_url)
         self.SessionLocal = sessionmaker(bind=self.engine)
+        self.supabase_client = supabase if supabase else None
         self.create_tables()
 
     def create_tables(self):
         """Create all tables"""
         try:
             Base.metadata.create_all(bind=self.engine)
+            if 'postgresql' in self.database_url:
+                print("[OK] PostgreSQL tables created/verified")
         except Exception as e:
-            print(f"Warning: Could not create tables: {e}")
+            print(f"[WARN] Could not create tables: {e}")
+            print("[INFO] Using fallback storage methods")
 
     def get_session(self):
         """Get database session"""
@@ -539,5 +547,18 @@ class Database:
         
         return pipeline_id
 
-# Global database instance
-db = Database()
+# Global database instance with error handling
+try:
+    db = Database()
+    print("[OK] Database initialized successfully")
+except Exception as e:
+    print(f"[ERROR] Database initialization failed: {e}")
+    # Create minimal fallback
+    class FallbackDB:
+        def get_session(self): raise RuntimeError("Database unavailable")
+        def save_spec(self, *args): return "fallback_id"
+        def save_eval(self, *args): return "fallback_id"
+        def get_report(self, *args): return None
+        def get_iteration_logs(self, *args): return []
+        def save_hidg_log(self, *args): return "fallback_id"
+    db = FallbackDB()

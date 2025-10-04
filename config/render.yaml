@@ -3,17 +3,39 @@ services:
     name: bhiv-backend
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 4
+    startCommand: uvicorn src.main_api:app --host 0.0.0.0 --port $PORT --workers 2
     envVars:
       - key: DATABASE_URL
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
+        value: postgresql://postgres.dntmhjlbxirtgslzwbui:Anmol%4025703@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+      - key: SUPABASE_URL
+        value: https://dntmhjlbxirtgslzwbui.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudG1oamxieGlydGdzbHp3YnVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc5NjI4NzQsImV4cCI6MjA0MzUzODg3NH0.8vQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
       - key: PRODUCTION_MODE
         value: true
-      - key: PYTHON_VERSION
-        value: 3.11.0
+      - key: LOCAL_GPU_ENABLED
+        value: false
+      - key: COMPUTE_STRATEGY
+        value: cloud_only
+      - key: YOTTA_API_KEY
+        sync: false
+      - key: YOTTA_ENDPOINT
+        value: https://api.yotta.com/v1/inference
+      - key: BURST_THRESHOLD
+        value: 0.3
+      - key: BHIV_BUCKET_ENABLED
+        value: true
+      - key: REDIS_URL
+        value: disabled
+      - key: API_KEY
+        value: bhiv-secret-key-2024
+      - key: JWT_SECRET
+        value: bhiv-jwt-secret-2024-production
+      - key: DEMO_USERNAME
+        value: admin
+      - key: DEMO_PASSWORD
+        value: bhiv2024
     scaling:
       minInstances: 1
-      maxInstances: 10
+      maxInstances: 5
     healthCheckPath: /health

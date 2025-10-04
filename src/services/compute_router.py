@@ -11,27 +11,40 @@ class ComputeRouter:
     """Enhanced compute routing with cost tracking and usage logging"""
     
     def __init__(self):
-        # GPU detection
-        try:
-            import torch
-            if torch.cuda.is_available():
-                gpu_name = torch.cuda.get_device_name(0)
-                self.local_gpu = '3060' in gpu_name or 'RTX' in gpu_name
-                self.gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3  # GB
-                print(f"[INFO] GPU detected: {gpu_name}, RTX-3060 compatible: {self.local_gpu}")
-                print(f"[INFO] GPU memory: {self.gpu_memory:.1f}GB")
-            else:
+        # Enhanced GPU detection for hybrid compute routing
+        self.compute_strategy = os.getenv("COMPUTE_STRATEGY", "hybrid")
+        self.burst_threshold = float(os.getenv("BURST_THRESHOLD", "0.6"))
+        self.local_memory_limit = float(os.getenv("LOCAL_GPU_MEMORY_LIMIT", "8"))
+        
+        # Local GPU detection
+        if os.getenv("LOCAL_GPU_ENABLED", "true").lower() == "true":
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    gpu_name = torch.cuda.get_device_name(0)
+                    self.local_gpu = True  # Accept any CUDA GPU for production
+                    self.gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
+                    self.rtx_3060_compatible = '3060' in gpu_name or 'RTX' in gpu_name
+                    print(f"[INFO] GPU detected: {gpu_name} ({self.gpu_memory:.1f}GB)")
+                    print(f"[INFO] RTX-3060 optimized: {self.rtx_3060_compatible}")
+                else:
+                    self.local_gpu = False
+                    self.gpu_memory = 0
+                    print("[INFO] No CUDA GPU available, Yotta-only mode")
+            except ImportError:
                 self.local_gpu = False
                 self.gpu_memory = 0
-                print("[INFO] No CUDA GPU available")
-        except ImportError:
+                print("[INFO] PyTorch not available, using rule-based fallback")
+        else:
             self.local_gpu = False
             self.gpu_memory = 0
-            print("[INFO] PyTorch not available, no GPU support")
+            print("[INFO] Local GPU disabled, cloud-only mode")
         
-        # Yotta cloud configuration
+        # Yotta cloud configuration for bursting
         self.yotta_key = os.getenv("YOTTA_API_KEY")
-        self.yotta_url = os.getenv("YOTTA_ENDPOINT", "https://api.yotta.ai/v1/inference")
+        self.yotta_url = os.getenv("YOTTA_ENDPOINT", "https://api.yotta.com/v1/inference")
+        self.yotta_available = bool(self.yotta_key and self.yotta_key != "disabled" and 
+                                   self.yotta_url and self.yotta_url != "disabled")
         
         # Cost tracking
         self.local_cost_per_token = 0.0001  # $0.0001 per token (electricity)
@@ -52,7 +65,9 @@ class ComputeRouter:
         # Load existing stats
         self._load_job_stats()
         
-        print(f"[INFO] Compute router initialized - Local GPU: {self.local_gpu}, Yotta: {bool(self.yotta_key)}")
+        print(f"[INFO] Compute router initialized - Strategy: {self.compute_strategy}")
+        print(f"[INFO] Local GPU: {self.local_gpu}, Yotta: {self.yotta_available}")
+        print(f"[INFO] Burst threshold: {self.burst_threshold}, Memory limit: {self.local_memory_limit}GB")
     
     def _calculate_complexity(self, prompt: str, context: Optional[str] = None) -> float:
         """Calculate prompt complexity score (0.0 - 1.0)"""
@@ -79,16 +94,26 @@ class ComputeRouter:
         return total_complexity
     
     def _should_use_local(self, complexity: float, job_type: str) -> bool:
-        """Determine if job should run locally"""
+        """Enhanced routing logic for hybrid compute strategy"""
         if not self.local_gpu:
             return False
         
-        # Local GPU thresholds
-        if complexity < 0.3:  # Simple jobs
+        # Always prefer local for fast, low-latency jobs
+        if job_type in ['generation', 'switch', 'evaluation'] and complexity < self.burst_threshold:
             return True
-        elif complexity < 0.6 and job_type in ['generation', 'switch']:  # Medium jobs for specific types
-            return True
-        elif complexity < 0.8 and self.gpu_memory > 8:  # Complex jobs only if enough memory
+        
+        # Burst to cloud for heavy jobs
+        heavy_jobs = ['batch_rl', 'cad_export', 'large_render', 'complex_generation']
+        if job_type in heavy_jobs or complexity >= self.burst_threshold:
+            if self.yotta_available:
+                print(f"[COMPUTE] Bursting to Yotta cloud - job_type: {job_type}, complexity: {complexity:.2f}")
+                return False
+            else:
+                print(f"[COMPUTE] Yotta unavailable, using local GPU for heavy job")
+                return self.gpu_memory >= self.local_memory_limit
+        
+        # Memory-based routing for medium complexity
+        if complexity < 0.8 and self.gpu_memory >= self.local_memory_limit:
             return True
         
         return False
@@ -108,12 +133,11 @@ class ComputeRouter:
         try:
             if use_local:
                 result = await self._run_local(prompt, context, job_type)
-                compute_type = "local"
+                compute_type = "local_gpu"
             else:
                 result = await self._run_yotta(prompt, context, job_type)
-                compute_type = "yotta"
+                compute_type = "yotta_cloud"
             
-            # Track usage and cost
             response_time = time.time() - start_time
             self._track_job(compute_type, prompt, response_time, complexity)
             
@@ -122,21 +146,22 @@ class ComputeRouter:
                 "compute": compute_type,
                 "complexity": complexity,
                 "response_time": response_time,
-                "cost_estimate": self._estimate_cost(prompt, compute_type)
+                "cost_estimate": self._estimate_cost(prompt, compute_type),
+                "routing_strategy": self.compute_strategy
             }
             
         except Exception as e:
-            # Fallback routing
-            print(f"[COMPUTE] Primary route failed: {e}, trying fallback")
+            print(f"[COMPUTE] Primary route failed: {e}, trying intelligent fallback")
             
-            if use_local:
-                # Fallback to Yotta
+            if use_local and self.yotta_available:
                 result = await self._run_yotta(prompt, context, job_type)
-                compute_type = "yotta_fallback"
-            else:
-                # Fallback to local
+                compute_type = "yotta_emergency"
+            elif not use_local and self.local_gpu:
                 result = await self._run_local(prompt, context, job_type)
                 compute_type = "local_fallback"
+            else:
+                result = self._rule_based_fallback(prompt, context, job_type)
+                compute_type = "rule_based"
             
             response_time = time.time() - start_time
             self._track_job(compute_type, prompt, response_time, complexity)
@@ -151,36 +176,68 @@ class ComputeRouter:
             }
     
     async def _run_local(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
-        """Run inference on local RTX-3060"""
+        """Run inference on local GPU (RTX-3060 optimized)"""
         agent = MainAgent()
         
-        # Add context to prompt if provided
         if context:
             enhanced_prompt = f"{prompt}\n\nContext: {context}"
         else:
             enhanced_prompt = prompt
         
-        # Run with parameters optimized for local GPU
-        params = {
-            "temperature": 0.7,
-            "max_tokens": 1024 if job_type == "generation" else 512
-        }
+        # Optimized parameters for local GPU
+        if job_type in ['generation', 'switch']:
+            params = {"temperature": 0.7, "max_tokens": 1024}
+        elif job_type == 'evaluation':
+            params = {"temperature": 0.5, "max_tokens": 512}
+        elif job_type in ['batch_rl', 'complex_generation']:
+            params = {"temperature": 0.8, "max_tokens": 2048}
+        else:
+            params = {"temperature": 0.7, "max_tokens": 1024}
         
+        print(f"[COMPUTE] Running on local GPU - job_type: {job_type}")
         spec = agent.run(enhanced_prompt, params)
         return spec.model_dump()
     
-    async def _run_yotta(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
-        """Run inference on Yotta cloud"""
-        if not self.yotta_key or not self.yotta_url:
-            raise Exception("Yotta cloud not configured")
+    def _rule_based_fallback(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
+        """Rule-based fallback when both GPU and cloud fail"""
+        print(f"[COMPUTE] Using rule-based fallback for job_type: {job_type}")
         
+        design_type = "building"
+        if any(word in prompt.lower() for word in ['car', 'vehicle']):
+            design_type = "vehicle"
+        elif any(word in prompt.lower() for word in ['electronics', 'circuit']):
+            design_type = "electronics"
+        elif any(word in prompt.lower() for word in ['furniture', 'chair']):
+            design_type = "furniture"
+        elif any(word in prompt.lower() for word in ['appliance', 'kitchen']):
+            design_type = "appliance"
+        
+        return {
+            "design_type": design_type,
+            "spec_id": f"rule_based_{int(time.time())}",
+            "materials": [{"type": "standard", "grade": "basic"}],
+            "dimensions": {"length": 10.0, "width": 10.0, "height": 3.0},
+            "features": ["basic_functionality"],
+            "components": ["main_structure"],
+            "fallback_method": "rule_based"
+        }
+    
+    async def _run_yotta(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
+        """Run inference on Yotta cloud with secure API"""
+        if not self.yotta_available:
+            print(f"[COMPUTE] Yotta cloud not available, falling back to local")
+            return await self._run_local(prompt, context, job_type)
+        
+        # Enhanced payload for Yotta cloud bursting
         payload = {
             "prompt": prompt,
             "context": context,
             "job_type": job_type,
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4" if job_type in ['batch_rl', 'complex_generation'] else "gpt-3.5-turbo",
             "temperature": 0.7,
-            "max_tokens": 2048
+            "max_tokens": 4096 if job_type in ['cad_export', 'large_render'] else 2048,
+            "gpu_tier": "high" if job_type in ['batch_rl', 'large_render'] else "standard",
+            "priority": "burst"
         }
         
         headers = {
@@ -188,16 +245,23 @@ class ComputeRouter:
             "Content-Type": "application/json"
         }
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        # Secure API call to Yotta with enhanced timeout for heavy jobs
+        timeout = 120.0 if job_type in ['batch_rl', 'cad_export', 'large_render'] else 30.0
+        
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(self.yotta_url, json=payload, headers=headers)
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            
+            # Log successful cloud burst
+            print(f"[COMPUTE] Yotta cloud burst successful - job_type: {job_type}")
+            return result
     
     def _estimate_cost(self, prompt: str, compute_type: str) -> float:
         """Estimate cost for inference"""
         token_count = len(prompt.split()) * 1.3  # Rough token estimation
         
-        if "local" in compute_type:
+        if "local" in compute_type or compute_type == "rule_based":
             return token_count * self.local_cost_per_token
         else:
             return token_count * self.yotta_cost_per_token
@@ -285,7 +349,9 @@ class ComputeRouter:
             },
             "efficiency_metrics": {
                 "local_percentage": (self.job_stats["local_jobs"] / max(self.job_stats["total_jobs"], 1)) * 100,
-                "cost_savings": self.job_stats["remote_cost"] - self.job_stats["local_cost"] if self.job_stats["local_jobs"] > 0 else 0
+                "cost_savings": self.job_stats["remote_cost"] - self.job_stats["local_cost"] if self.job_stats["local_jobs"] > 0 else 0,
+                "burst_efficiency": (self.job_stats["remote_jobs"] / max(self.job_stats["total_jobs"], 1)) * 100,
+                "hybrid_optimization": "optimal" if self.local_gpu and self.yotta_available else "limited"
             }
         }
     
@@ -330,6 +396,9 @@ class ComputeRouter:
         
         return recommendations
 
-# Global instance
+# Global instance with enhanced logging
 router = ComputeRouter()
 compute_router = router
+
+print(f"[INIT] Compute router ready - Strategy: {router.compute_strategy}")
+print(f"[INIT] Available compute: Local GPU: {router.local_gpu}, Yotta Cloud: {router.yotta_available}")
