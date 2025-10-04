@@ -76,7 +76,7 @@ from src.core import error_handlers
 from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
 from src.schemas.compliance_schema import ComplianceRunCaseRequest, ComplianceRunCaseResponse, ComplianceFeedbackRequest, ComplianceFeedbackResponse
 # from src.services.preview_generator import generate_preview
-from src.core.nlp_parser import ObjectTargeter, IterationTracker
+from src.api.contract_v2 import store_spec, load_spec, save_spec, save_iteration, generate_preview_url, ObjectTargeter
 # from src.services.spec_storage import spec_storage
 # from src.services.compliance import compliance_proxy
 # from src.services.geometry_storage import geometry_storage
@@ -86,7 +86,7 @@ try:
     from src.services.compute_router import compute_router, router
     from src.monitoring.cost_tracker import cost_tracker
     from src.utils.system_monitoring import system_monitor, init_sentry
-    from src.services.preview_manager import preview_manager
+    from src.services.preview_manager_v2 import preview_manager
     from src.services.frontend_integration import frontend_integration
     from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
     from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
@@ -614,89 +614,79 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, api
             print(f"HIDG logging error: {log_error}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/generate", tags=["🤖 Core AI Generation"])
+@app.post("/api/v1/generate", response_model=GenerateResponseV2, tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Enhanced generation with LM adapter and v2 schema"""
+    """Generate design specification - API Contract V2"""
     start_time = time.time()
     try:
-        # Enhanced compute routing with hybrid strategy
+        # Generate base spec using MainAgent
         system_monitor.increment_jobs()
-        try:
-            # Determine job complexity for routing
-            job_complexity = "complex_generation" if len(body.prompt) > 200 else "generation_v2"
-            
-            routed_result = await compute_router.route_inference(
-                body.prompt, body.context, job_complexity
-            )
-            
-            if isinstance(routed_result.get("result"), dict):
-                spec_data = routed_result["result"]
-                print(f"[GENERATE] Routed via {routed_result.get('compute', 'unknown')} - {routed_result.get('routing_strategy', 'default')}")
-            else:
-                spec = prompt_agent.run(body.prompt)
-                spec_data = spec.model_dump()
-        except Exception as e:
-            print(f"[WARN] Compute router failed: {e}, using direct generation")
-            spec = prompt_agent.run(body.prompt)
-            spec_data = spec.model_dump()
+        spec = prompt_agent.run(body.prompt)
+        spec_data = spec.model_dump()
         
-        # Create enhanced design objects
-        from src.schemas.v2_schema import DesignObject, SceneInfo, Dimensions3D, Position3D
+        # Create enhanced design objects with unique IDs
+        from src.schemas.v2_schema import DesignObject, SceneInfo, Dimensions3D, Position3D, VersionInfo
         
-        # Convert to enhanced format with unique IDs and editable properties
         objects = []
-        for i, component in enumerate(spec_data.get('components', ['main_structure'])):
+        components = spec_data.get('components', ['main_structure', 'foundation', 'walls'])
+        materials = spec_data.get('materials', [{'type': 'concrete'}])
+        
+        for i, component in enumerate(components):
+            material = materials[i % len(materials)].get('type', 'standard') if materials else 'standard'
+            
             obj = DesignObject(
                 type=component,
-                material=spec_data.get('materials', [{'type': 'standard'}])[0]['type'],
-                dimensions=Dimensions3D(width=10.0, height=3.0, depth=10.0),
-                position=Position3D(x=i*5.0, y=0.0, z=0.0),
+                material=material,
+                dimensions=Dimensions3D(
+                    width=spec_data.get('dimensions', {}).get('width', 10.0),
+                    height=spec_data.get('dimensions', {}).get('height', 3.0),
+                    depth=spec_data.get('dimensions', {}).get('depth', 10.0)
+                ),
+                position=Position3D(x=i*2.0, y=0.0, z=0.0),
                 editable=True,
                 properties={
-                    "design_type": spec_data.get('design_type', 'general'),
-                    "features": spec_data.get('features', [])
+                    "design_type": spec_data.get('design_type', 'building'),
+                    "features": spec_data.get('features', []),
+                    "category": component
                 }
             )
             objects.append(obj)
         
         # Create scene info
         scene = SceneInfo(
-            name=f"{spec_data.get('design_type', 'Design')} from prompt",
-            description=body.prompt[:100],
+            name=f"{spec_data.get('design_type', 'Design')} - {body.prompt[:30]}...",
+            description=body.prompt,
             total_objects=len(objects),
-            bounding_box=Dimensions3D(width=50.0, height=20.0, depth=50.0)
+            bounding_box=Dimensions3D(
+                width=spec_data.get('dimensions', {}).get('width', 20.0),
+                height=spec_data.get('dimensions', {}).get('height', 10.0),
+                depth=spec_data.get('dimensions', {}).get('depth', 20.0)
+            )
         )
         
-        # Create enhanced spec
+        # Create enhanced spec with version info
         enhanced_spec = EnhancedDesignSpec(
             objects=objects,
             scene=scene,
+            version=VersionInfo(author="MainAgent"),
             metadata={
-                "original_spec": spec_data,
-                "generation_method": "lm_adapter",
+                "prompt": body.prompt,
+                "context": body.context or {},
                 "style": body.style,
-                "constraints": body.constraints
+                "constraints": body.constraints or [],
+                "generation_method": "MainAgent",
+                "original_spec": spec_data
             }
         )
         
-        # Generate signed preview URL
-        preview_url = await preview_manager.generate_preview(enhanced_spec.model_dump())
+        # Store spec for editing
+        await store_spec(enhanced_spec.spec_id, enhanced_spec.model_dump())
+        
+        # Generate preview URL
+        preview_url = await generate_preview_url(enhanced_spec.spec_id)
         
         processing_time = time.time() - start_time
-        
-        # Store spec for later editing
-        try:
-            from src.services.spec_storage import spec_storage
-            spec_storage.store_spec(enhanced_spec.spec_id, enhanced_spec.model_dump())
-        except ImportError:
-            # Fallback storage
-            import json
-            from pathlib import Path
-            storage_dir = Path("spec_storage")
-            storage_dir.mkdir(exist_ok=True)
-            with open(storage_dir / f"{enhanced_spec.spec_id}.json", 'w') as f:
-                json.dump(enhanced_spec.model_dump(), f, indent=2)
         
         response = GenerateResponseV2(
             spec_id=enhanced_spec.spec_id,
@@ -705,81 +695,45 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
             processing_time=processing_time
         )
         
-        # Track metrics
-        try:
-            from src.monitoring.custom_metrics import spec_generation_counter, agent_response_time
-            spec_generation_counter.labels(agent_type='LMAdapter', success='true').inc()
-            agent_response_time.labels(agent_name='LMAdapter').observe(processing_time)
-        except ImportError:
-            pass
-        
-        return response.model_dump()
+        print(f"[GENERATE] Created spec {enhanced_spec.spec_id} with {len(objects)} objects")
+        return response
         
     except Exception as e:
-        # Track failed generation
-        try:
-            from src.monitoring.custom_metrics import spec_generation_counter
-            spec_generation_counter.labels(agent_type='LMAdapter', success='false').inc()
-        except ImportError:
-            pass
-        
+        print(f"[ERROR] Generate V2 failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/switch", tags=["🤖 Core AI Generation"])
+@app.post("/api/v1/switch", response_model=SwitchResponse, tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
 async def switch_material(request: Request, body: SwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Enhanced material switching with NLP parsing and iteration tracking"""
-    client_ip = request.client.host if request.client else "unknown"
-    print(f"[SWITCH] Request from {client_ip}: '{body.instruction}' for spec {body.spec_id}")
+    """Switch material/properties - API Contract V2"""
+    print(f"[SWITCH] Processing: '{body.instruction}' for spec {body.spec_id}")
     
     try:
-        # Get existing spec
-        try:
-            from src.services.spec_storage import spec_storage
-            spec_data = spec_storage.get_spec(body.spec_id)
-        except ImportError:
-            # Fallback storage
-            import json
-            from pathlib import Path
-            storage_file = Path("spec_storage") / f"{body.spec_id}.json"
-            if storage_file.exists():
-                with open(storage_file, 'r') as f:
-                    spec_data = json.load(f)
-            else:
-                spec_data = None
-        
+        # Load existing spec
+        spec_data = await load_spec(body.spec_id)
         if not spec_data:
-            print(f"[SWITCH] Spec {body.spec_id} not found")
             raise HTTPException(status_code=404, detail="Spec not found")
         
-        # Enhanced NLP parsing
+        # Parse instruction to find target and changes
         targeter = ObjectTargeter()
-        tracker = IterationTracker()
-        
-        # Parse target object with enhanced matching
         target_object_id = targeter.parse_target(body.instruction, spec_data)
-        if not target_object_id:
-            print(f"[SWITCH] Could not identify target object from: '{body.instruction}'")
-            raise HTTPException(status_code=400, detail="Could not identify target object from instruction")
-        
-        # Parse material/property changes
         material_changes = targeter.parse_material(body.instruction)
-        if not material_changes:
-            print(f"[SWITCH] Could not parse material changes from: '{body.instruction}'")
-            raise HTTPException(status_code=400, detail="Could not parse material changes from instruction")
         
-        print(f"[SWITCH] Target object: {target_object_id}, Changes: {material_changes}")
+        if not target_object_id:
+            raise HTTPException(status_code=400, detail="Could not identify target object")
+        if not material_changes:
+            raise HTTPException(status_code=400, detail="Could not parse material changes")
         
         # Find and update target object
-        updated_objects = []
-        changed_object = None
+        target_obj = None
         object_before = None
         
         for obj in spec_data['objects']:
             if obj['id'] == target_object_id:
+                target_obj = obj
                 object_before = obj.copy()
                 
-                # Apply material changes
+                # Apply material change
                 if 'material' in material_changes:
                     obj['material'] = material_changes['material']
                 
@@ -789,85 +743,34 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
                         obj['properties'] = {}
                     obj['properties'].update(material_changes['properties'])
                 
-                changed_object = obj.copy()
-                print(f"[SWITCH] Updated object: {obj['type']} -> {obj.get('material', 'N/A')}")
-            
-            updated_objects.append(obj)
+                break
         
-        if not changed_object:
-            raise HTTPException(status_code=400, detail="Target object not found in spec")
+        if not target_obj:
+            raise HTTPException(status_code=404, detail="Target object not found")
         
-        # Update spec with changes
-        spec_data['objects'] = updated_objects
-        
-        # Update metadata
-        from datetime import datetime
-        if 'metadata' in spec_data:
-            spec_data['metadata']['modified_at'] = datetime.now().isoformat()
-        
-        # Save iteration with detailed diff tracking
-        iteration_id = tracker.save_iteration(
+        # Save iteration details
+        iteration_id = await save_iteration(
             body.spec_id, 
-            body.instruction, 
             target_object_id, 
             object_before, 
-            changed_object
+            target_obj.copy(),
+            body.instruction
         )
         
-        # Save to database
-        try:
-            iteration_data = {
-                'spec_id': body.spec_id,
-                'iteration_id': iteration_id,
-                'instruction': body.instruction,
-                'object_id': target_object_id,
-                'before': object_before,
-                'after': changed_object,
-                'diff': targeter.generate_diff(object_before, changed_object),
-                'timestamp': datetime.now().isoformat()
-            }
-            db.save_iteration_log(body.spec_id, iteration_data)
-            print(f"[SWITCH] Iteration {iteration_id} saved to database")
-        except Exception as e:
-            print(f"[SWITCH] Failed to save iteration to DB: {e}")
+        # Update spec storage
+        await save_spec(body.spec_id, spec_data)
         
-        # Update stored spec
-        try:
-            spec_storage.update_spec(body.spec_id, spec_data)
-        except Exception as e:
-            print(f"[SWITCH] Failed to update stored spec: {e}")
-        
-        # Generate new preview
-        try:
-            preview_url = await preview_manager.generate_preview(spec_data)
-        except Exception as e:
-            print(f"[SWITCH] Failed to generate preview: {e}")
-            preview_url = f"/preview/{body.spec_id}_updated.jpg"
+        # Regenerate preview
+        preview_url = await generate_preview_url(body.spec_id)
         
         # Create response
-        from src.schemas.v2_schema import EnhancedDesignSpec
-        try:
-            updated_spec = EnhancedDesignSpec(**spec_data)
-        except Exception as e:
-            print(f"[SWITCH] Failed to create EnhancedDesignSpec: {e}")
-            # Fallback response
-            return {
-                "success": True,
-                "spec_id": body.spec_id,
-                "iteration_id": iteration_id,
-                "changed": {
-                    "object_id": target_object_id,
-                    "before": object_before,
-                    "after": changed_object
-                },
-                "preview_url": preview_url,
-                "message": "Material switch completed successfully"
-            }
+        from src.schemas.v2_schema import EnhancedDesignSpec, ChangeInfo
+        updated_spec = EnhancedDesignSpec(**spec_data)
         
         change_info = ChangeInfo(
             object_id=target_object_id,
             before=object_before,
-            after=changed_object
+            after=target_obj.copy()
         )
         
         response = SwitchResponse(
@@ -878,19 +781,19 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
             changed=change_info
         )
         
-        print(f"[SWITCH] Successfully completed switch for spec {body.spec_id}")
-        return response.model_dump()
+        print(f"[SWITCH] Completed: {target_obj['type']} -> {target_obj['material']}")
+        return response
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[SWITCH] Error processing switch: {str(e)}")
+        print(f"[ERROR] Switch failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/compliance/run_case", response_model=ComplianceRunCaseResponse, tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
 async def compliance_run_case(request: Request, case_data: ComplianceRunCaseRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Run compliance analysis on design specification"""
+    """Run compliance analysis via Soham's compliance engine"""
     try:
         # Convert to dict and add case_id if not present
         case_dict = case_data.model_dump()
@@ -898,87 +801,104 @@ async def compliance_run_case(request: Request, case_data: ComplianceRunCaseRequ
             import uuid
             case_dict['case_id'] = str(uuid.uuid4())
         
-        # Enhanced compliance processing
-        try:
-            from src.integrations.soham_compliance import SohamComplianceIntegration
-            soham_compliance = SohamComplianceIntegration()
-            result = await soham_compliance.run_case(case_dict)
-        except ImportError:
-            # Fallback to existing compliance service
-            try:
-                from src.services.compliance import proxy as compliance_proxy
-                result = await compliance_proxy.run_case(case_dict)
-            except ImportError:
-                # Final fallback
-                result = {
-                    "case_id": case_data.get('case_id'),
-                    "status": "processed_with_fallback",
-                    "entitlements": {"analysis_summary": "Compliance analysis completed"}
-                }
+        print(f"[COMPLIANCE] Running case {case_dict['case_id']}")
         
-        # Store geometry if provided
+        # Call Soham compliance integration
+        from src.integrations.soham_compliance import SohamComplianceIntegration
+        soham_compliance = SohamComplianceIntegration()
+        result = await soham_compliance.run_case(case_dict)
+        
         case_id = case_dict['case_id']
         project_id = case_dict.get('project_id', case_id)
         
+        # Store geometry data if provided
         if 'geometry_data' in result:
-            # Mock geometry file storage
-            try:
-                from src.services.geometry_storage import geometry_storage
-                geometry_url = geometry_storage.store_geometry(
-                    case_id, project_id, b"mock_geometry_data", "stl"
-                )
-            except ImportError:
-                geometry_url = f"/geometry/{case_id}.stl"
+            from src.services.geometry_storage import geometry_storage
+            geometry_data = result['geometry_data']
+            if isinstance(geometry_data, str):
+                geometry_data = geometry_data.encode('utf-8')
+            
+            geometry_url = geometry_storage.store_geometry(
+                case_id, project_id, geometry_data, "stl"
+            )
             result['geometry_url'] = geometry_url
+            print(f"[COMPLIANCE] Stored geometry: {geometry_url}")
         
-        # Save to database
+        # Save compliance case to database
         try:
             db.save_compliance_case(case_id, project_id, case_dict, result)
+            print(f"[COMPLIANCE] Saved case {case_id} to database")
         except Exception as e:
-            print(f"Failed to save compliance case: {e}")
+            print(f"[WARN] Failed to save compliance case to DB: {e}")
         
         return {"success": True, "result": result}
         
     except Exception as e:
+        print(f"[ERROR] Compliance run_case failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Compliance service error: {str(e)}")
 
 @app.post("/api/v1/compliance/feedback", response_model=ComplianceFeedbackResponse, tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
 async def compliance_feedback(request: Request, feedback_data: ComplianceFeedbackRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
-    """Submit feedback for compliance analysis results"""
+    """Submit feedback for compliance analysis results via Soham"""
     try:
+        print(f"[COMPLIANCE] Processing feedback for case {feedback_data.case_id}")
+        
+        # Send feedback via Soham compliance integration
+        from src.integrations.soham_compliance import SohamComplianceIntegration
+        soham_compliance = SohamComplianceIntegration()
+        
+        # Add send_feedback method call
+        feedback_dict = feedback_data.model_dump()
         try:
-            from src.services.compliance import proxy as compliance_proxy
-        except ImportError:
-            raise HTTPException(status_code=503, detail="Compliance service not available")
-        result = await compliance_proxy.send_feedback(feedback_data.model_dump())
+            # Call Soham's feedback endpoint
+            import httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"http://localhost:{soham_compliance.compliance_port}/feedback",
+                    json=feedback_dict,
+                    timeout=30
+                )
+                result = response.json() if response.status_code == 200 else {"status": "feedback_received"}
+        except Exception as e:
+            print(f"[WARN] Soham feedback failed: {e}, using fallback")
+            result = {"status": "feedback_received", "message": "Feedback processed"}
         
         # Save feedback to database
         try:
             case_id = feedback_data.case_id
             if case_id:
-                db.save_compliance_feedback(case_id, feedback_data.model_dump(), result)
+                db.save_compliance_feedback(case_id, feedback_dict, result)
+                print(f"[COMPLIANCE] Saved feedback for case {case_id}")
         except Exception as e:
-            print(f"Failed to save compliance feedback: {e}")
+            print(f"[WARN] Failed to save compliance feedback to DB: {e}")
         
         return {
             "success": True,
             "result": result,
-            "message": "Compliance feedback sent"
+            "message": "Compliance feedback sent to Soham"
         }
         
     except Exception as e:
+        print(f"[ERROR] Compliance feedback failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Compliance feedback error: {str(e)}")
 
 @app.get("/geometry/{case_id}", tags=["⚖️ Compliance Pipeline"])
 async def get_geometry(case_id: str):
-    """Get geometry file for case_id"""
+    """Get geometry file for case_id from Nipun's storage"""
     try:
         from fastapi.responses import FileResponse
-        from pathlib import Path
+        from src.services.geometry_storage import geometry_storage
         
-        # Check for STL or ZIP file
+        # Get geometry URL from storage
+        geometry_url = geometry_storage.get_geometry_url(case_id)
+        if not geometry_url:
+            raise HTTPException(status_code=404, detail="Geometry file not found")
+        
+        # Serve file from local storage
+        from pathlib import Path
         geometry_dir = Path("geometry")
+        
         for ext in ['stl', 'zip']:
             file_path = geometry_dir / f"{case_id}.{ext}"
             if file_path.exists():
@@ -993,6 +913,7 @@ async def get_geometry(case_id: str):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ERROR] Geometry retrieval failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/pipeline/run", tags=["⚖️ Compliance Pipeline"])
@@ -2269,19 +2190,16 @@ async def run_end_to_end_demo(request: Request, demo_data: dict, api_key: str = 
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 8000))
-    workers = int(os.getenv("MAX_WORKERS", 4))
 
     if os.getenv("PRODUCTION_MODE") == "true":
-        # Production configuration - validated for high concurrency
+        # Production configuration
         uvicorn.run(
-            "main_api:app",
+            app,
             host="0.0.0.0",
             port=port,
-            workers=workers,
-            worker_connections=1000,
-            backlog=2048,
+            access_log=True,
             timeout_keep_alive=30
         )
     else:
         # Development configuration
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="0.0.0.0", port=port, reload=True)

@@ -116,29 +116,19 @@ class ComputeRouter:
         return total_complexity
     
     def _should_use_local(self, complexity: float, job_type: str) -> bool:
-        """Enhanced routing logic for hybrid compute strategy"""
+        """RTX-3060 optimized routing logic"""
         if not self.local_gpu:
             return False
         
-        # Always prefer local for fast, low-latency jobs
-        if job_type in ['generation', 'switch', 'evaluation'] and complexity < self.burst_threshold:
+        # RTX-3060 is optimal for lightweight jobs
+        if complexity < self.burst_threshold and job_type in ['generation', 'switch', 'evaluation']:
             return True
         
-        # Burst to cloud for heavy jobs
-        heavy_jobs = ['batch_rl', 'cad_export', 'large_render', 'complex_generation']
-        if job_type in heavy_jobs or complexity >= self.burst_threshold:
-            if self.yotta_available:
-                print(f"[COMPUTE] Bursting to Yotta cloud - job_type: {job_type}, complexity: {complexity:.2f}")
-                return False
-            else:
-                print(f"[COMPUTE] Yotta unavailable, using local GPU for heavy job")
-                return self.gpu_memory >= self.local_memory_limit
+        # Burst heavy jobs to Yotta cloud to preserve local GPU
+        if complexity >= self.burst_threshold or job_type in ['batch_rl', 'complex_generation']:
+            return not self.yotta_available  # Only use local if cloud unavailable
         
-        # Memory-based routing for medium complexity
-        if complexity < 0.8 and self.gpu_memory >= self.local_memory_limit:
-            return True
-        
-        return False
+        return True
     
     async def route_inference(self, prompt: str, context: Optional[str] = None, job_type: str = "generation") -> Dict[str, Any]:
         """Route inference with enhanced logic and cost tracking"""
@@ -199,27 +189,21 @@ class ComputeRouter:
             }
     
     async def _run_local(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
-        """Run inference on local GPU (RTX-3060 optimized)"""
+        """Run inference on local RTX-3060 GPU with optimizations"""
         agent = MainAgent()
         
-        if context:
-            enhanced_prompt = f"{prompt}\n\nContext: {context}"
-        else:
-            enhanced_prompt = prompt
+        # RTX-3060 optimized parameters (8GB VRAM)
+        rtx_params = {
+            "batch_size": 1,
+            "memory_efficient": True,
+            "gpu_optimization": "rtx_3060",
+            "precision": "fp16" if self.rtx_3060_compatible else "fp32"
+        }
         
-        # Optimized parameters for local GPU
-        if job_type in ['generation', 'switch']:
-            params = {"temperature": 0.7, "max_tokens": 1024}
-        elif job_type == 'evaluation':
-            params = {"temperature": 0.5, "max_tokens": 512}
-        elif job_type in ['batch_rl', 'complex_generation']:
-            params = {"temperature": 0.8, "max_tokens": 2048}
-        else:
-            params = {"temperature": 0.7, "max_tokens": 1024}
+        enhanced_prompt = f"{prompt}\nContext: {context}" if context else prompt
         
-        if os.getenv("PRODUCTION_MODE") != "true":
-            print(f"[COMPUTE] Running on local GPU - job_type: {job_type}")
-        spec = agent.run(enhanced_prompt, params)
+        print(f"[RTX-3060] Processing {job_type} locally")
+        spec = agent.run(enhanced_prompt, rtx_params)
         return spec.model_dump()
     
     def _rule_based_fallback(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
@@ -248,74 +232,38 @@ class ComputeRouter:
         }
     
     async def _run_yotta(self, prompt: str, context: Optional[str], job_type: str) -> Dict[str, Any]:
-        """Run inference on Yotta cloud with secure API"""
+        """Run inference on Yotta cloud with RTX-3060 optimization"""
         if not self.yotta_available:
-            print(f"[COMPUTE] Yotta cloud not available, falling back to local")
             return await self._run_local(prompt, context, job_type)
         
-        # Check for mock cloud in production
-        if self.yotta_url.startswith("mock://"):
-            if os.getenv("PRODUCTION_MODE") != "true":
-                print(f"[COMPUTE] Using mock cloud compute for {job_type}")
-            # Simulate cloud processing
-            import asyncio
-            await asyncio.sleep(0.1)
-            
-            return {
-                "design_type": "building",
-                "spec_id": f"cloud_{int(time.time())}",
-                "materials": [{"type": "cloud_optimized", "grade": "premium"}],
-                "dimensions": {"length": 25.0, "width": 20.0, "height": 12.0},
-                "features": ["cloud_generated", "production_ready"],
-                "components": ["foundation", "structure", "roof"],
-                "mock_cloud": True
-            }
-        
-        # Enhanced payload for Yotta cloud bursting
+        # Enhanced payload for Yotta cloud bursting with RTX-3060 compatibility
         payload = {
             "prompt": prompt,
             "context": context,
             "job_type": job_type,
-            "model": "gpt-4" if job_type in ['batch_rl', 'complex_generation'] else "gpt-3.5-turbo",
+            "gpu_preference": "rtx_3060_compatible",
+            "memory_limit": "8gb",
+            "optimization": "hybrid_burst",
             "temperature": 0.7,
-            "max_tokens": 4096 if job_type in ['cad_export', 'large_render'] else 2048,
-            "gpu_tier": "high" if job_type in ['batch_rl', 'large_render'] else "standard",
-            "priority": "burst",
-            "client_id": "bhiv-backend",
-            "version": "2.1.1"
+            "max_tokens": 2048,
+            "client_id": "bhiv-rtx3060"
         }
         
         headers = {
             "Authorization": f"Bearer {self.yotta_key}",
-            "Content-Type": "application/json",
-            "User-Agent": "BHIV-Backend/2.1.1",
-            "X-Client-Version": "2.1.1"
+            "Content-Type": "application/json"
         }
         
-        # Secure API call to Yotta with enhanced timeout for heavy jobs
-        timeout = 120.0 if job_type in ['batch_rl', 'cad_export', 'large_render'] else 30.0
-        
-        print(f"[YOTTA] Calling Yotta API for {job_type} - {self.yotta_url}")
-        
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(self.yotta_url, json=payload, headers=headers)
                 response.raise_for_status()
                 result = response.json()
-                
-                # Log successful cloud burst
-                print(f"[YOTTA] Cloud burst successful - job_type: {job_type}, response: {response.status_code}")
+                print(f"[YOTTA] RTX-3060 compatible inference completed")
                 return result
                 
-        except httpx.HTTPStatusError as e:
-            print(f"[YOTTA] API error {e.response.status_code}: {e.response.text}")
-            # Fallback to rule-based if API fails
-            return self._rule_based_fallback(prompt, context, job_type)
-        except httpx.TimeoutException:
-            print(f"[YOTTA] Timeout calling Yotta API for {job_type}")
-            return self._rule_based_fallback(prompt, context, job_type)
         except Exception as e:
-            print(f"[YOTTA] Unexpected error: {e}")
+            print(f"[YOTTA] Cloud failed: {e}, using local fallback")
             return self._rule_based_fallback(prompt, context, job_type)
     
     def _estimate_cost(self, prompt: str, compute_type: str) -> float:
