@@ -6,7 +6,7 @@ import json
 import hashlib
 import hmac
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional
 from pathlib import Path
 import httpx
@@ -34,7 +34,7 @@ class BHIVBucketStorage:
             return self._generate_local_signed_url(object_key, expires_in)
         
         # Generate AWS S3-style signed URL
-        expires = datetime.utcnow() + timedelta(seconds=expires_in)
+        expires = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         expires_timestamp = int(expires.timestamp())
         
         # Create string to sign
@@ -61,7 +61,7 @@ class BHIVBucketStorage:
     
     def _generate_local_signed_url(self, object_key: str, expires_in: int) -> str:
         """Generate signed URL for local storage"""
-        expires = int((datetime.utcnow() + timedelta(seconds=expires_in)).timestamp())
+        expires = int((datetime.now(timezone.utc) + timedelta(seconds=expires_in)).timestamp())
         
         # Create signature for local URLs
         payload = f"{object_key}:{expires}"
@@ -111,7 +111,7 @@ class BHIVBucketStorage:
     
     def _generate_auth_header(self, method: str, object_key: str) -> str:
         """Generate authorization header for bucket requests"""
-        timestamp = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        timestamp = datetime.now(timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
         
         string_to_sign = f"{method}\n\nimage/jpeg\n{timestamp}\n/{self.bucket_name}/{object_key}"
         
@@ -131,7 +131,7 @@ class BHIVBucketStorage:
             return self._verify_local_signature(object_key, expires, signature)
         
         # Verify bucket signed URL
-        if datetime.utcnow().timestamp() > expires:
+        if datetime.now(timezone.utc).timestamp() > expires:
             return False
         
         # Recreate signature
@@ -148,7 +148,7 @@ class BHIVBucketStorage:
     
     def _verify_local_signature(self, object_key: str, expires: int, signature: str) -> bool:
         """Verify local signed URL signature"""
-        if datetime.utcnow().timestamp() > expires:
+        if datetime.now(timezone.utc).timestamp() > expires:
             return False
         
         payload = f"{object_key}:{expires}"

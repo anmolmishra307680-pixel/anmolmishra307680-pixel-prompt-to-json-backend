@@ -75,6 +75,24 @@ API_KEY = os.getenv("API_KEY", "test-api-key")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 bearer_scheme = HTTPBearer(auto_error=False)
 
+# Lifespan event handler (replaces deprecated on_event)
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print(f"[STARTUP] Prompt-to-JSON API v{API_VERSION} starting up...")
+    print(f"[STARTUP] Environment: {'Production' if os.getenv('PRODUCTION_MODE') == 'true' else 'Development'}")
+    print(f"[STARTUP] Database: {'Supabase PostgreSQL' if hasattr(db, 'supabase_client') else 'SQLite Fallback'}")
+    print(f"[STARTUP] Agents initialized: {len([a for a in [prompt_agent, evaluator_agent, rl_agent] if hasattr(a, 'run')])}")
+    print(f"[STARTUP] Server ready to accept requests")
+    
+    yield
+    
+    # Shutdown
+    print(f"[SHUTDOWN] Prompt-to-JSON API v{API_VERSION} shutting down...")
+    print(f"[SHUTDOWN] Cleanup completed")
+
 def verify_api_key(api_key: str = Depends(api_key_header)):
     """Verify API key from X-API-Key header"""
     if not api_key:
@@ -101,6 +119,7 @@ app = FastAPI(
     description="Production-Ready AI Backend with Multi-Agent Coordination",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
     openapi_tags=[
         {"name": "Authentication", "description": "JWT token and API key authentication"},
         {"name": "AI Agents", "description": "AI specification generation and evaluation"},
@@ -178,17 +197,21 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-# Startup event for logging
-@app.on_event("startup")
-async def startup_event():
+# Lifespan event handler (replaces deprecated on_event)
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     print(f"[STARTUP] Prompt-to-JSON API v{API_VERSION} starting up...")
     print(f"[STARTUP] Environment: {'Production' if os.getenv('PRODUCTION_MODE') == 'true' else 'Development'}")
     print(f"[STARTUP] Database: {'Supabase PostgreSQL' if hasattr(db, 'supabase_client') else 'SQLite Fallback'}")
     print(f"[STARTUP] Agents initialized: {len([a for a in [prompt_agent, evaluator_agent, rl_agent] if hasattr(a, 'run')])}")
     print(f"[STARTUP] Server ready to accept requests")
-
-@app.on_event("shutdown")
-async def shutdown_event():
+    
+    yield
+    
+    # Shutdown
     print(f"[SHUTDOWN] Prompt-to-JSON API v{API_VERSION} shutting down...")
     print(f"[SHUTDOWN] Cleanup completed")
 

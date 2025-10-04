@@ -333,3 +333,9 @@ class PreviewGenerator:
 
 # Global instance
 preview_generator = PreviewGenerator()
+
+# Legacy function for backward compatibility
+def generate_preview(spec_data: Dict[str, Any]) -> str:
+    """Legacy function for backward compatibility"""
+    import asyncio
+    return asyncio.run(preview_generator.generate_preview(spec_data))
