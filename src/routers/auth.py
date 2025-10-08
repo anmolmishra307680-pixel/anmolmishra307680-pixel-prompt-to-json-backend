@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from src.auth.jwt_middleware import create_jwt_token, verify_token
-from src.auth import verify_api_key
+from src.core.auth import verify_api_key
 from pydantic import BaseModel
 import os
 

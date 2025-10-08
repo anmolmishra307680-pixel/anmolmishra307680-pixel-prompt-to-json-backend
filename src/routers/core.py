@@ -1,7 +1,7 @@
 """Core orchestration router for end-to-end workflows"""
 
 from fastapi import APIRouter, Depends, HTTPException
-from src.auth import verify_api_key, verify_jwt_token
+from src.core.auth import verify_api_key, get_current_user as verify_jwt_token
 from src.data.database import Database
 from src.lm_adapter import LMAdapter
 from src.agents.evaluator_agent import EvaluatorAgent

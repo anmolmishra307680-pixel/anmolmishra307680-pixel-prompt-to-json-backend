@@ -1,7 +1,7 @@
 """VR Bridge endpoints for preview and metadata"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.auth import verify_api_key
+from src.core.auth import verify_api_key
 from src.auth.jwt_middleware import verify_token
 from src.services.preview_service import preview_service
 from pydantic import BaseModel

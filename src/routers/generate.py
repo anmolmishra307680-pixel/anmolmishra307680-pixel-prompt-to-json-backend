@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.schemas.spec_schema import GenerateRequest, GenerateResponse, Spec, ObjectSpec, SceneSpec
 from src.lm_adapter import LMAdapter
-from src.auth import verify_api_key, verify_jwt_token
+from src.core.auth import verify_api_key, get_current_user as verify_jwt_token
 from src.auth.jwt_middleware import verify_token
 import uuid
 from typing import Dict, Any

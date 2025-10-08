@@ -25,11 +25,11 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 # Import agents and database
-from agents.main_agent import MainAgent
-from agents.evaluator_agent import EvaluatorAgent
-from agents.rl_agent import RLLoop
-from data.database import Database
-from agents.feedback_agent import FeedbackAgent
+from src.agents.main_agent import MainAgent
+from src.agents.evaluator_agent import EvaluatorAgent
+from src.agents.rl_agent import RLLoop
+from src.data.database import Database
+from src.agents.feedback_agent import FeedbackAgent
 from core.cache import cache
 from core.auth import create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordBearer

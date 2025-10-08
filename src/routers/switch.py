@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from src.schemas.spec_schema import Spec, ObjectSpec
-from src.auth import verify_api_key, verify_jwt_token
+from src.core.auth import verify_api_key, get_current_user as verify_jwt_token
 from src.data.database import Database
 from pydantic import BaseModel
 from typing import Dict, Any, Optional

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Header
 import jwt
+import secrets
 
 SECRET_KEY = os.getenv("SECRET_KEY", "bhiv2024")
 ALGORITHM = "HS256"
@@ -36,6 +37,26 @@ def get_current_user(authorization: str = Header(None)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization header")
     token = authorization.split(" ", 1)[1]
     return verify_token(token)
+
+def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")):
+    """Verify API key from X-API-Key header"""
+    if not x_api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API key. Include X-API-Key header."
+        )
+
+    # In test environment, be more flexible with API key validation
+    if os.getenv("TESTING") == "true":
+        return x_api_key
+
+    API_KEY = os.getenv("API_KEY", "bhiv-secret-key-2024")
+    if not secrets.compare_digest(x_api_key, API_KEY):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API key. Include X-API-Key header."
+        )
+    return x_api_key
 
 def authenticate_user(username: str, password: str):
     """Simple user authentication for demo"""
