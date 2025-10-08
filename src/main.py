@@ -30,28 +30,28 @@ from src.agents.evaluator_agent import EvaluatorAgent
 from src.agents.rl_agent import RLLoop
 from src.data.database import Database
 from src.agents.feedback_agent import FeedbackAgent
-from core.cache import cache
-from core.auth import create_access_token, get_current_user
+from src.core.cache import cache
+from src.core.auth import create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import os
-from core import error_handlers
-from core.lm_adapter import LocalLMAdapter
-from lm_adapter import LMAdapter
-from routers.generate import router as generate_router
-from schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
-from services.preview_generator import generate_preview
-from core.nlp_parser import ObjectTargeter
-from services.spec_storage import spec_storage
-from services.compliance import compliance_proxy
-from services.geometry_storage import geometry_storage
-from auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
-from services.compute_router import compute_router
-from utils.system_monitoring import system_monitor, init_sentry
-from services.preview_manager import preview_manager
-from services.frontend_integration import frontend_integration
-from api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
-from api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
+from src.core import error_handlers
+from src.core.lm_adapter import LocalLMAdapter
+from src.lm_adapter import LMAdapter
+from src.routers.generate import router as generate_router
+from src.schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
+from src.services.preview_generator import generate_preview
+from src.core.nlp_parser import ObjectTargeter
+from src.services.spec_storage import spec_storage
+from src.services.compliance import compliance_proxy
+from src.services.geometry_storage import geometry_storage
+from src.auth.jwt_auth import jwt_auth, LoginRequest, RefreshRequest
+from src.services.compute_router import compute_router
+from src.utils.system_monitoring import system_monitor, init_sentry
+from src.services.preview_manager import preview_manager
+from src.services.frontend_integration import frontend_integration
+from src.api.mobile_api import mobile_api, MobileGenerateRequest, MobileSwitchRequest
+from src.api.vr_stubs import vr_stubs, VRGenerateRequest, AROverlayRequest
 
 from fastapi.security import HTTPBearer
 
@@ -111,15 +111,15 @@ app = FastAPI(
 
 # Include routers
 app.include_router(generate_router, prefix="/api/v1", tags=["AI Agents"])
-from routers.switch import router as switch_router
+from src.routers.switch import router as switch_router
 app.include_router(switch_router, prefix="/api/v1", tags=["AI Agents"])
-from routers.compliance import router as compliance_router
+from src.routers.compliance import router as compliance_router
 app.include_router(compliance_router, prefix="/api/v1", tags=["Compliance"])
-from routers.core import router as core_router
+from src.routers.core import router as core_router
 app.include_router(core_router, prefix="/api/v1", tags=["Core Orchestration"])
-from routers.auth import router as auth_router
+from src.routers.auth import router as auth_router
 app.include_router(auth_router, prefix="/api/v1", tags=["Authentication"])
-from routers.vr import router as vr_router
+from src.routers.vr import router as vr_router
 app.include_router(vr_router, prefix="/api/v1", tags=["VR/AR"])
 
 # Register structured exception handlers
