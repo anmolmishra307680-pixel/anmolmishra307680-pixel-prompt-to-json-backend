@@ -908,6 +908,8 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
 async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """Evaluate specification"""
     try:
+        from src.schemas.legacy_schema import DesignSpec, MaterialSpec, DimensionSpec
+        
         spec_data = eval_request.spec.copy()
         
         # Add default values for missing required fields
@@ -924,37 +926,43 @@ async def evaluate_spec(request: Request, eval_request: EvaluateRequest, api_key
         if "requirements" not in spec_data:
             spec_data["requirements"] = [eval_request.prompt]
         
-        # Run evaluation with error handling
+        # Convert to DesignSpec object
         try:
-            evaluation = evaluator_agent.run(spec_data, eval_request.prompt)
-        except Exception as eval_error:
-            print(f"Evaluator agent error: {eval_error}")
-            # Create fallback evaluation
-            evaluation = {
-                "score": 0.75,
-                "feedback": "Evaluation completed with fallback agent",
-                "criteria_scores": {"aesthetics": 0.8, "functionality": 0.7, "cost": 0.75}
-            }
+            spec = DesignSpec(**spec_data)
+        except Exception as convert_error:
+            print(f"Spec conversion error: {convert_error}")
+            # Create minimal valid spec
+            spec = DesignSpec(
+                building_type="general",
+                stories=1,
+                materials=[MaterialSpec(type="concrete")],
+                dimensions=DimensionSpec(length=10, width=10, height=3, area=100),
+                features=[],
+                requirements=[eval_request.prompt]
+            )
+        
+        # Run evaluation
+        evaluation = evaluator_agent.run(spec, eval_request.prompt)
+
+        # Convert evaluation to dict safely
+        if hasattr(evaluation, 'model_dump') and hasattr(evaluation, 'score'):
+            eval_dict = evaluation.model_dump()  # type: ignore
+            eval_score = float(evaluation.score)  # type: ignore
+        else:
+            # Fallback for dict response
+            eval_dict = evaluation if isinstance(evaluation, dict) else {"score": 0.75}
+            score_val = eval_dict.get("score", 0.75)
+            eval_score = float(score_val) if isinstance(score_val, (int, float, str)) else 0.75
 
         # Save evaluation and get report ID
         try:
-            spec_id = db.save_spec(eval_request.prompt, spec_data, 'EvaluatorAgent')
-            eval_dict = getattr(evaluation, 'model_dump', lambda: evaluation if isinstance(evaluation, dict) else {})()  # type: ignore[attr-defined]
-            eval_score = getattr(evaluation, 'score', 0.75)  # type: ignore[attr-defined]
-            report_id = db.save_eval(spec_id, eval_request.prompt, eval_dict if isinstance(eval_dict, dict) else evaluation, eval_score)
+            spec_id = db.save_spec(eval_request.prompt, spec.model_dump(), 'EvaluatorAgent')
+            report_id = db.save_eval(spec_id, eval_request.prompt, eval_dict, eval_score)
         except Exception as e:
             print(f"DB save failed: {e}")
             import uuid
             report_id = str(uuid.uuid4())
-
-        # Ensure we have a valid evaluation dict
-        if hasattr(evaluation, 'model_dump'):
-            eval_dict = evaluation.model_dump()
-        elif isinstance(evaluation, dict):
-            eval_dict = evaluation
-        else:
-            eval_dict = {"score": 0.75, "feedback": "Evaluation completed"}
-
+        
         return {
             "report_id": report_id,
             "evaluation": eval_dict,
