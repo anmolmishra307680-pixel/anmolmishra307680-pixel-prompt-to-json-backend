@@ -32,8 +32,13 @@ from data.database import Database
 from agents.feedback_agent import FeedbackAgent
 from core.cache import cache
 from core.auth import create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+import os
 from core import error_handlers
 from core.lm_adapter import LocalLMAdapter
+from lm_adapter import LMAdapter
+from routers.generate import router as generate_router
 from schemas.v2_schema import GenerateRequestV2, GenerateResponseV2, EnhancedDesignSpec, SwitchRequest, SwitchResponse, ChangeInfo
 from services.preview_generator import generate_preview
 from core.nlp_parser import ObjectTargeter
@@ -103,6 +108,19 @@ app = FastAPI(
         {"name": "Monitoring", "description": "Health checks and system metrics"}
     ]
 )
+
+# Include routers
+app.include_router(generate_router, prefix="/api/v1", tags=["AI Agents"])
+from routers.switch import router as switch_router
+app.include_router(switch_router, prefix="/api/v1", tags=["AI Agents"])
+from routers.compliance import router as compliance_router
+app.include_router(compliance_router, prefix="/api/v1", tags=["Compliance"])
+from routers.core import router as core_router
+app.include_router(core_router, prefix="/api/v1", tags=["Core Orchestration"])
+from routers.auth import router as auth_router
+app.include_router(auth_router, prefix="/api/v1", tags=["Authentication"])
+from routers.vr import router as vr_router
+app.include_router(vr_router, prefix="/api/v1", tags=["VR/AR"])
 
 # Register structured exception handlers
 from fastapi import HTTPException
@@ -174,7 +192,7 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS middleware - only allow authorized frontends
+# CORS middleware - configured for Three.js loader
 FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
 allowed_origins = [FRONTEND_URL] if FRONTEND_URL != "*" else ["*"]
 
@@ -182,8 +200,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Length", "Content-Type"]
 )
 
 # Sentry monitoring with performance tracing
@@ -246,7 +265,20 @@ except ImportError:
     def get_business_metrics(): return "# Metrics not available\n"
 
 # Initialize Sentry monitoring
+from src.monitoring.sentry_config import init_sentry
 init_sentry()
+
+# Initialize Prometheus metrics
+from src.monitoring.prometheus_metrics import prometheus_metrics
+from src.middleware.request_middleware import RequestMonitoringMiddleware
+
+# Add monitoring middleware
+app.add_middleware(RequestMonitoringMiddleware)
+
+@app.get("/metrics")
+async def get_prometheus_metrics():
+    """Prometheus metrics endpoint"""
+    return prometheus_metrics.get_metrics_response()
 
 # Request tracking middleware
 @app.middleware("http")

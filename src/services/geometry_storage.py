@@ -1,65 +1,63 @@
-"""Geometry file storage using Nipun's bucket"""
+"""Geometry storage service for BHIV bucket integration"""
 
 import os
-import uuid
 from pathlib import Path
-from typing import Optional, Dict, Any
-import json
+from typing import Optional
+import uuid
 
 class GeometryStorage:
+    """Service for storing geometry files (.stl, .zip) to BHIV bucket"""
+    
     def __init__(self):
-        self.bucket_url = os.getenv("NIPUN_BUCKET_URL", "https://storage.example.com")
-        self.local_storage = Path("geometry")
-        self.local_storage.mkdir(exist_ok=True)
-        self.case_mapping = {}
-        self._load_mappings()
+        self.storage_dir = Path("geometry")
+        self.storage_dir.mkdir(exist_ok=True)
+        self.bucket_url = os.getenv("BHIV_BUCKET_URL", "https://bhiv-bucket.s3.amazonaws.com")
     
-    def _load_mappings(self):
-        """Load case_id to project_id mappings"""
-        mapping_file = self.local_storage / "case_mappings.json"
-        if mapping_file.exists():
-            try:
-                with open(mapping_file, 'r') as f:
-                    self.case_mapping = json.load(f)
-            except Exception:
-                self.case_mapping = {}
-    
-    def _save_mappings(self):
-        """Save case_id to project_id mappings"""
-        mapping_file = self.local_storage / "case_mappings.json"
-        try:
-            with open(mapping_file, 'w') as f:
-                json.dump(self.case_mapping, f, indent=2)
-        except Exception:
-            pass
-    
-    def store_geometry(self, case_id: str, project_id: str, file_data: bytes, file_type: str = "stl") -> str:
+    def store_geometry(self, case_id: str, project_id: str, geometry_data: bytes, file_format: str = "stl") -> str:
         """Store geometry file and return URL"""
-        # Map case_id to project_id
-        self.case_mapping[case_id] = project_id
-        self._save_mappings()
-        
-        # Store file locally (would upload to Nipun's bucket in production)
-        filename = f"{case_id}.{file_type}"
-        file_path = self.local_storage / filename
-        
-        with open(file_path, 'wb') as f:
-            f.write(file_data)
-        
-        # Return URL (would be bucket URL in production)
-        return f"/geometry/{filename}"
+        try:
+            # Generate filename
+            filename = f"{case_id}.{file_format}"
+            local_path = self.storage_dir / filename
+            
+            # Save file locally (mock BHIV bucket)
+            with open(local_path, 'wb') as f:
+                f.write(geometry_data)
+            
+            # Return mock bucket URL
+            bucket_url = f"{self.bucket_url}/geometry/{project_id}/{filename}"
+            
+            print(f"[GEOMETRY] Stored {filename} for case {case_id}")
+            return bucket_url
+            
+        except Exception as e:
+            print(f"[ERROR] Geometry storage failed: {e}")
+            return f"/geometry/{case_id}.{file_format}"  # Fallback local URL
     
-    def get_geometry_url(self, case_id: str) -> Optional[str]:
-        """Get geometry file URL for case_id"""
-        for ext in ['stl', 'zip']:
-            filename = f"{case_id}.{ext}"
-            if (self.local_storage / filename).exists():
-                return f"/geometry/{filename}"
+    def get_geometry_url(self, case_id: str, file_format: str = "stl") -> Optional[str]:
+        """Get geometry URL for case_id"""
+        filename = f"{case_id}.{file_format}"
+        local_path = self.storage_dir / filename
+        
+        if local_path.exists():
+            return f"/geometry/{filename}"
         return None
     
-    def get_project_id(self, case_id: str) -> Optional[str]:
-        """Get project_id for case_id"""
-        return self.case_mapping.get(case_id)
+    def delete_geometry(self, case_id: str, file_format: str = "stl") -> bool:
+        """Delete geometry file"""
+        try:
+            filename = f"{case_id}.{file_format}"
+            local_path = self.storage_dir / filename
+            
+            if local_path.exists():
+                local_path.unlink()
+                print(f"[GEOMETRY] Deleted {filename}")
+                return True
+            return False
+            
+        except Exception as e:
+            print(f"[ERROR] Geometry deletion failed: {e}")
+            return False
 
 # Global instance
 geometry_storage = GeometryStorage()

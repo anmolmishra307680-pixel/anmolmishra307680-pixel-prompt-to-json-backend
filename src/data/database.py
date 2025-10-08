@@ -385,6 +385,78 @@ class Database:
 
         return iteration_id
     
+    async def save_iteration(self, spec_id: str, before_spec: Dict[Any, Any], after_spec: Dict[Any, Any], feedback: str) -> str:
+        """Save iteration for switch operations"""
+        try:
+            with self.get_session() as session:
+                # Use raw SQL for iterations table
+                result = session.execute(
+                    "INSERT INTO iterations (spec_id, before_spec, after_spec, feedback) VALUES (:spec_id, :before_spec, :after_spec, :feedback) RETURNING iter_id",
+                    {"spec_id": spec_id, "before_spec": json.dumps(before_spec), "after_spec": json.dumps(after_spec), "feedback": feedback}
+                )
+                iter_id = result.fetchone()[0]
+                session.commit()
+                return str(iter_id)
+        except Exception as e:
+            print(f"DB iteration save failed: {e}")
+            return self._fallback_save_iteration_simple(spec_id, before_spec, after_spec, feedback)
+    
+    async def get_spec(self, spec_id: str) -> Optional[Dict[Any, Any]]:
+        """Get specification by ID (async version)"""
+        return self.get_spec_sync(spec_id)
+    
+    def get_spec_sync(self, spec_id: str) -> Optional[Dict[Any, Any]]:
+        """Get specification by ID (sync version)"""
+        try:
+            with self.get_session() as session:
+                spec = session.query(Spec).filter(Spec.id == spec_id).first()
+                if spec:
+                    return spec.spec_data
+        except Exception as e:
+            print(f"DB query failed: {e}")
+        return None
+    
+    async def update_spec(self, spec_id: str, spec_data: Dict[Any, Any]) -> bool:
+        """Update specification in database"""
+        try:
+            with self.get_session() as session:
+                spec = session.query(Spec).filter(Spec.id == spec_id).first()
+                if spec:
+                    spec.spec_data = spec_data
+                    session.commit()
+                    return True
+        except Exception as e:
+            print(f"DB update failed: {e}")
+        return False
+    
+    def _fallback_save_iteration_simple(self, spec_id: str, before_spec: Dict[Any, Any], after_spec: Dict[Any, Any], feedback: str) -> str:
+        """Fallback storage for simple iterations"""
+        from pathlib import Path
+        from datetime import datetime
+        
+        iter_id = str(uuid.uuid4())
+        Path("logs").mkdir(exist_ok=True)
+        
+        existing_logs = []
+        iteration_file = Path("logs/iterations.json")
+        if iteration_file.exists():
+            with open(iteration_file, 'r') as f:
+                existing_logs = json.load(f)
+        
+        existing_logs.append({
+            'iter_id': iter_id,
+            'spec_id': spec_id,
+            'before_spec': before_spec,
+            'after_spec': after_spec,
+            'feedback': feedback,
+            'ts': datetime.now().isoformat()
+        })
+        
+        with open(iteration_file, 'w') as f:
+            json.dump(existing_logs, f, indent=2)
+        
+        return iter_id
+
     def save_iteration_log(self, spec_id: str, iteration_data: Dict[Any, Any]) -> str:
         """Save simple iteration log for switch operations"""
         try:
@@ -520,6 +592,52 @@ class Database:
             json.dump(existing_logs, f, indent=2)
         
         return pipeline_id
+    
+    async def save_spec_async(self, prompt: str, spec_data: Dict[Any, Any], agent_type: str = 'CorePipeline') -> str:
+        """Async version of save_spec"""
+        return self.save_spec(prompt, spec_data, agent_type)
+    
+    async def save_eval_async(self, spec_id: str, prompt: str, eval_data: Dict[Any, Any], score: float) -> str:
+        """Async version of save_eval"""
+        return self.save_eval(spec_id, prompt, eval_data, score)
+    
+    async def save_iteration_results(self, pipeline_id: str, iteration_results: Dict[Any, Any]) -> str:
+        """Save iteration results from core pipeline"""
+        try:
+            return self._fallback_save_pipeline(f"iter_{pipeline_id}", iteration_results)
+        except Exception as e:
+            print(f"Failed to save iteration results: {e}")
+            return str(uuid.uuid4())
+    
+    async def store_geometry_reference(self, case_id: str, original_url: str, local_url: str) -> str:
+        """Store geometry file reference in compliance_cases"""
+        try:
+            from pathlib import Path
+            from datetime import datetime
+            
+            Path("logs").mkdir(exist_ok=True)
+            
+            existing_logs = []
+            geometry_file = Path("logs/geometry_storage.json")
+            if geometry_file.exists():
+                with open(geometry_file, 'r') as f:
+                    existing_logs = json.load(f)
+            
+            existing_logs.append({
+                'case_id': case_id,
+                'original_url': original_url,
+                'local_url': local_url,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            with open(geometry_file, 'w') as f:
+                json.dump(existing_logs, f, indent=2)
+            
+            return case_id
+            
+        except Exception as e:
+            print(f"Failed to store geometry reference: {e}")
+            return case_id
 
 # Global database instance
 db = Database()
