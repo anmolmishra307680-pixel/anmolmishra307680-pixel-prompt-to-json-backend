@@ -48,9 +48,10 @@ pythonpath = [".", "src"]
 asyncio_mode = "auto"
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
+    "ignore::PendingDeprecationWarning", 
     "ignore:Please use.*python_multipart.*:PendingDeprecationWarning",
-    "ignore:.*deprecated.*:DeprecationWarning"
+    "ignore:.*deprecated.*:DeprecationWarning",
+    "ignore::pytest.PytestReturnNotNoneWarning"
 ]
 markers = [
     "slow: marks tests as slow",
