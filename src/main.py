@@ -25,7 +25,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 import uvicorn
 from datetime import datetime, timezone, timedelta
 import os
@@ -952,6 +952,10 @@ async def evaluate_spec(request: Request, eval_data: dict, api_key: str = Depend
     try:
         from src.schemas.legacy_schema import DesignSpec, MaterialSpec, DimensionSpec
         
+        # Validate required fields - empty dict should return 422
+        if not eval_data:
+            raise HTTPException(status_code=422, detail="Missing required fields: spec or prompt")
+        
         # Handle both dict and EvaluateRequest formats
         if 'spec' in eval_data and 'prompt' in eval_data:
             spec_data = eval_data['spec'].copy()
@@ -1013,6 +1017,8 @@ async def evaluate_spec(request: Request, eval_data: dict, api_key: str = Depend
             "success": True,
             "message": "Evaluation completed successfully"
         }
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Evaluate endpoint error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1078,16 +1084,31 @@ async def iterate_rl(request: Request, iter_data: dict, api_key: str = Depends(v
 
 @app.post("/batch-evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def batch_evaluate(request: Request, batch_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def batch_evaluate(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
     """📋 Batch Evaluate Multiple"""
     try:
-        specs = batch_data.get('specs', [])
+        # Get raw JSON data from request
+        batch_data = await request.json()
+        
+        # Handle both list of strings and dict with specs key
+        if isinstance(batch_data, list):
+            prompts = batch_data
+            specs = [{'prompt': prompt} for prompt in prompts]
+        else:
+            specs = batch_data.get('specs', [])
+        
         results = []
         for spec_data in specs:
-            prompt = spec_data.get('prompt', 'Evaluate design')
+            if isinstance(spec_data, str):
+                prompt = spec_data
+                spec_json = None
+            else:
+                prompt = spec_data.get('prompt', 'Evaluate design')
+                spec_json = spec_data.get('spec_json')
+            
             # Use provided spec or generate new one
-            if 'spec_json' in spec_data:
-                spec = spec_data['spec_json']
+            if spec_json:
+                spec = spec_json
             else:
                 spec = prompt_agent.run(prompt)
             # Evaluate spec
