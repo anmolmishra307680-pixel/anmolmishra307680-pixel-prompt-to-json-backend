@@ -21,7 +21,7 @@ class RefreshRequest(BaseModel):
 
 class JWTAuth:
     def __init__(self):
-        self.secret_key = os.getenv("JWT_SECRET", "dev-secret-key")
+        self.secret_key = os.getenv("SECRET_KEY", "bhiv2024")
         self.algorithm = "HS256"
         self.access_token_expire = 15  # 15 minutes
         self.refresh_token_expire = 7 * 24 * 60  # 7 days in minutes

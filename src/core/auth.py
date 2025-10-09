@@ -4,7 +4,10 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Header
-import jwt
+try:
+    from jose import jwt
+except ImportError:
+    import jwt
 import secrets
 
 SECRET_KEY = os.getenv("SECRET_KEY", "bhiv2024")
@@ -29,7 +32,7 @@ def verify_token(token: str):
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-def get_current_user(authorization: str = Header(None)):
+def get_current_user(authorization: Optional[str] = Header(None, alias="Authorization")):
     """Get current user from JWT token"""
     if not authorization:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Authorization header")
