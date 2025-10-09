@@ -88,7 +88,7 @@ class TestFullWorkflow:
         
         prompts = ["Office building", "Warehouse facility", "Residential complex"]
         
-        response = client.post("/batch-evaluate", json=prompts, headers=headers)
+        response = client.post("/batch-evaluate", json={"specs": prompts}, headers=headers)
         assert response.status_code == 200
         
         data = response.json()
