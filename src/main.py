@@ -205,10 +205,7 @@ def custom_openapi():
                         if param.get("name") not in ["authorization", "Authorization", "X-API-Key"]
                     ]
 
-                if path == "/health" or path == "/ping" or path == "/" or path == "/metrics":
-                    # Public endpoints for monitoring
-                    operation["security"] = []
-                elif path.startswith("/api/v1/auth/"):
+                if path.startswith("/api/v1/auth/"):
                     # Auth endpoints require only API key
                     operation["security"] = [
                         {"APIKeyHeader": []}
@@ -336,7 +333,7 @@ async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key:
 
 @app.get("/", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def root_get(request: Request):
+async def root_get(request: Request, auth=Depends(verify_dual_auth)):
     """🏠 API root information"""
     return {
         "message": "Prompt-to-JSON API",
@@ -346,13 +343,14 @@ async def root_get(request: Request):
     }
 
 @app.head("/", tags=["📊 System Monitoring"])
-async def root_head():
+@limiter.limit("20/minute")
+async def root_head(request: Request, auth=Depends(verify_dual_auth)):
     """🏠 API root HEAD request"""
     return Response()
 
 @app.get("/health", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def health_check(request: Request):
+async def health_check(request: Request, auth=Depends(verify_dual_auth)):
     """❤️ Public health check endpoint for monitoring"""
     try:
         # Test database connection
@@ -377,7 +375,8 @@ async def health_check(request: Request):
     }
 
 @app.get("/ping", tags=["📊 System Monitoring"])
-async def ping():
+@limiter.limit("20/minute")
+async def ping(request: Request, auth=Depends(verify_dual_auth)):
     """🏓 Simple ping endpoint"""
     return {"message": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
 
@@ -500,7 +499,8 @@ async def get_cache_stats(request: Request, auth=Depends(verify_dual_auth)):
         raise HTTPException(status_code=500, detail="Failed to get cache stats")
 
 @app.get("/metrics", tags=["📊 System Monitoring"])
-async def get_metrics_public():
+@limiter.limit("20/minute")
+async def get_metrics_public(request: Request, auth=Depends(verify_dual_auth)):
     """📊 Public Prometheus metrics endpoint"""
     try:
         system_monitor.increment_requests()
@@ -836,7 +836,8 @@ async def compliance_feedback(request: Request, feedback_data: dict, auth=Depend
         raise HTTPException(status_code=500, detail=f"Compliance feedback error: {str(e)}")
 
 @app.get("/geometry/{case_id}", tags=["⚖️ Compliance Pipeline"])
-async def get_geometry(case_id: str):
+@limiter.limit("20/minute")
+async def get_geometry(request: Request, case_id: str, auth=Depends(verify_dual_auth)):
     """📏 Get Geometry Data"""
     try:
         from fastapi.responses import FileResponse
@@ -1452,7 +1453,8 @@ async def get_preview_viewer(request: Request, spec_id: str, auth=Depends(verify
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/preview/local/{object_key}", tags=["🖼️ Preview Management"])
-async def serve_local_preview(object_key: str):
+@limiter.limit("20/minute")
+async def serve_local_preview(request: Request, object_key: str, auth=Depends(verify_dual_auth)):
     """📁 Serve Local Preview"""
     try:
         from fastapi.responses import FileResponse
@@ -1505,7 +1507,8 @@ async def refresh_preview(request: Request, refresh_data: dict, auth=Depends(ver
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/preview/verify", tags=["🖼️ Preview Management"])
-async def verify_preview_url(request: Request, spec_id: str, expires: int, signature: str):
+@limiter.limit("20/minute")
+async def verify_preview_url(request: Request, spec_id: str, expires: int, signature: str, auth=Depends(verify_dual_auth)):
     """✅ Verify Preview URL"""
     try:
         is_valid = preview_manager.verify_preview_url(spec_id, expires, signature)
