@@ -29,8 +29,8 @@ def get_auth_headers():
         }
     
     try:
-        # Token endpoint now requires API key
-        token_response = client.post("/token", 
+        # Use new auth endpoint
+        token_response = client.post("/api/v1/auth/login", 
                                    json={"username": USERNAME, "password": PASSWORD},
                                    headers={"X-API-Key": API_KEY})
         if token_response.status_code == 200:
@@ -100,12 +100,12 @@ class TestFullWorkflow:
         """Test monitoring endpoints"""
         headers = get_auth_headers()
         
-        # Health check
+        # Health check (now requires dual auth)
         health_response = client.get("/health", headers=headers)
         assert health_response.status_code == 200
         assert "status" in health_response.json()
         
-        # Metrics (now requires authentication)
+        # Metrics (requires dual auth)
         metrics_response = client.get("/metrics", headers=headers)
         assert metrics_response.status_code == 200
 
