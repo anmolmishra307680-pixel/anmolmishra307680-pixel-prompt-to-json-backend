@@ -306,6 +306,27 @@ async def login_v2(request: Request, login_data: LoginRequest, api_key: str = De
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/token", tags=["🔐 Authentication & Security"])
+@limiter.limit("10/minute")
+async def get_token(request: Request, token_data: TokenRequest, api_key: str = Depends(verify_api_key)):
+    """🔑 Get JWT token (legacy endpoint for tests)"""
+    try:
+        # Validate credentials
+        demo_username = os.getenv("DEMO_USERNAME", "admin")
+        demo_password = os.getenv("DEMO_PASSWORD", "bhiv2024")
+        
+        if token_data.username == demo_username and token_data.password == demo_password:
+            # Create simple token response for tests
+            token = create_access_token(data={"username": token_data.username})
+            return {"access_token": token, "token_type": "bearer"}
+        
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/v1/auth/refresh", tags=["🔐 Authentication & Security"])
 @limiter.limit("20/minute")
 async def refresh_token(request: Request, refresh_data: RefreshRequest, api_key: str = Depends(verify_api_key)):
