@@ -409,7 +409,7 @@ async def basic_metrics(request: Request, auth=Depends(verify_dual_auth)):
 
 @app.get("/cli-tools", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_cli_tools(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_cli_tools(request: Request, auth=Depends(verify_dual_auth)):
     """Get available CLI tools and commands"""
     try:
         db.get_session()
@@ -440,7 +440,7 @@ async def get_cli_tools(request: Request, api_key: str = Depends(verify_api_key)
 
 @app.get("/system-test", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def run_system_test(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def run_system_test(request: Request, auth=Depends(verify_dual_auth)):
     """🧪 Run system validation"""
     try:
         # Test core functionality
@@ -463,7 +463,7 @@ async def run_system_test(request: Request, api_key: str = Depends(verify_api_ke
 
 @app.get("/agent-status", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_agent_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_agent_status(request: Request, auth=Depends(verify_dual_auth)):
     """Get status of all AI agents"""
     try:
         from src.agents.agent_coordinator import AgentCoordinator
@@ -485,7 +485,7 @@ async def get_agent_status(request: Request, api_key: str = Depends(verify_api_k
 
 @app.get("/cache-stats", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_cache_stats(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_cache_stats(request: Request, auth=Depends(verify_dual_auth)):
     """Get cache performance statistics"""
     try:
         stats = cache.get_stats()
@@ -512,7 +512,7 @@ async def get_metrics_public():
 
 @app.get("/api/v1/metrics/detailed", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_detailed_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_detailed_metrics(request: Request, auth=Depends(verify_dual_auth)):
     """Detailed metrics with authentication"""
     try:
         system_monitor.increment_requests()
@@ -530,14 +530,14 @@ async def get_detailed_metrics(request: Request, api_key: str = Depends(verify_a
 
 @app.get("/system-overview", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_system_overview(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_system_overview(request: Request, auth=Depends(verify_dual_auth)):
     """📊 Complete system status"""
     try:
         # Get all system information
         health_info = await health_check(request)
-        agent_info = await get_agent_status(request, api_key, user)
-        cache_info = await get_cache_stats(request, api_key, user)
-        metrics_info = await basic_metrics(request, api_key, user)
+        agent_info = await get_agent_status(request, auth)
+        cache_info = await get_cache_stats(request, auth)
+        metrics_info = await basic_metrics(request, auth)
 
         return {
             "success": True,
@@ -580,7 +580,7 @@ async def get_system_overview(request: Request, api_key: str = Depends(verify_ap
 
 @app.get("/api/v1/monitoring/sentry", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def get_sentry_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_sentry_status(request: Request, auth=Depends(verify_dual_auth)):
     """Get Sentry monitoring status"""
     try:
         sentry_dsn = os.getenv("SENTRY_DSN")
@@ -618,7 +618,7 @@ async def generate_spec(request: Request, generate_request: GenerateRequest, aut
 
 @app.post("/api/v1/generate", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
-async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def generate_v2(request: Request, body: GenerateRequestV2, auth=Depends(verify_dual_auth)):
     """✨ Enhanced generation with LM adapter and v2 schema"""
     start_time = time.time()
     try:
@@ -690,7 +690,7 @@ async def generate_v2(request: Request, body: GenerateRequestV2, api_key: str = 
 
 @app.post("/api/v1/switch", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
-async def switch_material(request: Request, body: SwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def switch_material(request: Request, body: SwitchRequest, auth=Depends(verify_dual_auth)):
     """🔄 Switch object materials/properties based on natural language instruction"""
     try:
         # Get existing spec
@@ -774,7 +774,7 @@ async def switch_material(request: Request, body: SwitchRequest, api_key: str = 
 
 @app.post("/api/v1/compliance/run_case", tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
-async def compliance_run_case(request: Request, case_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def compliance_run_case(request: Request, case_data: dict, auth=Depends(verify_dual_auth)):
     """✅ Run Compliance Case"""
     try:
         # Add case_id if not present
@@ -813,7 +813,7 @@ async def compliance_run_case(request: Request, case_data: dict, api_key: str = 
 
 @app.post("/api/v1/compliance/feedback", tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("20/minute")
-async def compliance_feedback(request: Request, feedback_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def compliance_feedback(request: Request, feedback_data: dict, auth=Depends(verify_dual_auth)):
     """💬 Compliance Feedback"""
     try:
         result = await compliance_proxy.send_feedback(feedback_data)
@@ -862,7 +862,7 @@ async def get_geometry(case_id: str):
 
 @app.post("/api/v1/pipeline/run", tags=["⚖️ Compliance Pipeline"])
 @limiter.limit("10/minute")
-async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def run_compliance_pipeline(request: Request, pipeline_data: dict, auth=Depends(verify_dual_auth)):
     """🔧 Run Compliance Pipeline"""
     try:
         import uuid
@@ -1010,7 +1010,7 @@ async def evaluate_spec(request: Request, eval_data: dict, auth=Depends(verify_d
 
 @app.post("/iterate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def iterate_rl(request: Request, iter_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def iterate_rl(request: Request, iter_data: dict, auth=Depends(verify_dual_auth)):
     """🎯 Iterate RL"""
     start_time = time.time()
     try:
@@ -1069,7 +1069,7 @@ async def iterate_rl(request: Request, iter_data: dict, api_key: str = Depends(v
 
 @app.post("/batch-evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def batch_evaluate(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def batch_evaluate(request: Request, auth=Depends(verify_dual_auth)):
     """📋 Batch Evaluate Multiple"""
     try:
         # Get raw JSON data from request
@@ -1116,7 +1116,7 @@ async def batch_evaluate(request: Request, api_key: str = Depends(verify_api_key
 
 @app.post("/advanced-rl", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def advanced_rl_training(request: Request, rl_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def advanced_rl_training(request: Request, rl_data: dict, auth=Depends(verify_dual_auth)):
     """🧠 Advanced RL Training"""
     try:
         # Import with fallback for missing module
@@ -1148,7 +1148,7 @@ async def advanced_rl_training(request: Request, rl_data: dict, api_key: str = D
 
 @app.post("/coordinated-improvement", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def coordinated_improvement(request: Request, coord_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def coordinated_improvement(request: Request, coord_data: dict, auth=Depends(verify_dual_auth)):
     """🤝 Multi-Agent Coordination"""
     try:
         from src.agents.agent_coordinator import AgentCoordinator
@@ -1167,7 +1167,7 @@ async def coordinated_improvement(request: Request, coord_data: dict, api_key: s
 
 @app.post("/api/v1/evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def evaluate_v2(request: Request, eval_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def evaluate_v2(request: Request, eval_data: dict, auth=Depends(verify_dual_auth)):
     """📊 Enhanced evaluation endpoint"""
     try:
         spec_id = eval_data.get('spec_id')
@@ -1205,7 +1205,7 @@ async def evaluate_v2(request: Request, eval_data: dict, api_key: str = Depends(
 
 @app.post("/api/v1/iterate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def iterate_v2(request: Request, iter_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def iterate_v2(request: Request, iter_data: dict, auth=Depends(verify_dual_auth)):
     """🔄 Enhanced RL iteration endpoint"""
     try:
         spec_id = iter_data.get('spec_id')
@@ -1232,7 +1232,7 @@ async def iterate_v2(request: Request, iter_data: dict, api_key: str = Depends(v
 
 @app.get("/reports/{report_id}", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
-async def get_report(request: Request, report_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_report(request: Request, report_id: str, auth=Depends(verify_dual_auth)):
     """📄 Get Evaluation Report"""
     try:
         report = db.get_report(report_id)
@@ -1249,7 +1249,7 @@ async def get_report(request: Request, report_id: str, api_key: str = Depends(ve
 
 @app.post("/log-values", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
-async def log_values(request: Request, log_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def log_values(request: Request, log_data: dict, auth=Depends(verify_dual_auth)):
     """Store HIDG values per day"""
     try:
         # Handle dict format
@@ -1276,7 +1276,7 @@ async def log_values(request: Request, log_data: dict, api_key: str = Depends(ve
 
 @app.get("/iterations/{session_id}", tags=["📋 Reports & Data"])
 @limiter.limit("20/minute")
-async def get_iteration_logs(request: Request, session_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_iteration_logs(request: Request, session_id: str, auth=Depends(verify_dual_auth)):
     """📊 Get Iteration Logs"""
     try:
         # Try database first
@@ -1315,7 +1315,7 @@ async def get_iteration_logs(request: Request, session_id: str, api_key: str = D
 
 @app.post("/admin/prune-logs", tags=["🔧 Administration"])
 @limiter.limit("20/minute")
-async def prune_logs(request: Request, retention_days: int = 30, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def prune_logs(request: Request, retention_days: int = 30, auth=Depends(verify_dual_auth)):
     """Prune old logs for production scalability"""
     try:
         # Import with fallback for missing module
@@ -1345,7 +1345,7 @@ async def prune_logs(request: Request, retention_days: int = 30, api_key: str = 
 
 @app.post("/api/v1/ui/session", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
-async def create_ui_session(request: Request, session_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def create_ui_session(request: Request, session_data: dict, auth=Depends(verify_dual_auth)):
     """🖥️ Create UI Session"""
     try:
         import uuid
@@ -1363,7 +1363,7 @@ async def create_ui_session(request: Request, session_data: dict, api_key: str =
 
 @app.post("/api/v1/ui/flow", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
-async def log_ui_flow(request: Request, flow_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def log_ui_flow(request: Request, flow_data: dict, auth=Depends(verify_dual_auth)):
     """📊 Log UI Flow"""
     try:
         # Provide defaults for missing fields
@@ -1388,7 +1388,7 @@ async def log_ui_flow(request: Request, flow_data: dict, api_key: str = Depends(
 
 @app.get("/api/v1/ui/summary", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
-async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_ui_test_summary(request: Request, auth=Depends(verify_dual_auth)):
     """📋 Get UI Test Summary"""
     try:
         summary = frontend_integration.get_ui_test_summary()
@@ -1401,7 +1401,7 @@ async def get_ui_test_summary(request: Request, api_key: str = Depends(verify_ap
 
 @app.get("/api/v1/three-js/{spec_id}", tags=["🖥️ Frontend Integration"])
 @limiter.limit("20/minute")
-async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_three_js_data(request: Request, spec_id: str, auth=Depends(verify_dual_auth)):
     """🎮 Get Three.js Data"""
     try:
         # Get spec data
@@ -1429,7 +1429,7 @@ async def get_three_js_data(request: Request, spec_id: str, api_key: str = Depen
 
 @app.get("/api/v1/preview/viewer/{spec_id}", tags=["🖼️ Preview Management"])
 @limiter.limit("20/minute")
-async def get_preview_viewer(request: Request, spec_id: str, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_preview_viewer(request: Request, spec_id: str, auth=Depends(verify_dual_auth)):
     """👁️ Get Preview Viewer"""
     try:
         # Get spec data
@@ -1478,7 +1478,7 @@ async def serve_local_preview(object_key: str):
 
 @app.post("/api/v1/preview/refresh", tags=["🖼️ Preview Management"])
 @limiter.limit("10/minute")
-async def refresh_preview(request: Request, refresh_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def refresh_preview(request: Request, refresh_data: dict, auth=Depends(verify_dual_auth)):
     """🔄 Refresh Preview"""
     try:
         spec_id = refresh_data.get('spec_id')
@@ -1525,7 +1525,7 @@ async def verify_preview_url(request: Request, spec_id: str, expires: int, signa
 
 @app.post("/api/v1/preview/cleanup", tags=["🖼️ Preview Management"])
 @limiter.limit("5/minute")
-async def cleanup_stale_previews(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def cleanup_stale_previews(request: Request, auth=Depends(verify_dual_auth)):
     """🧹 Cleanup Stale Previews"""
     try:
         cleaned_count = preview_manager.cleanup_stale_previews()
@@ -1544,7 +1544,7 @@ async def cleanup_stale_previews(request: Request, api_key: str = Depends(verify
 
 @app.post("/api/v1/mobile/generate", tags=["📱 Mobile Platform"])
 @limiter.limit("20/minute")
-async def mobile_generate_fixed(request: Request, mobile_request: MobileGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def mobile_generate_fixed(request: Request, mobile_request: MobileGenerateRequest, auth=Depends(verify_dual_auth)):
     """📱 Mobile Generate Fixed"""
     try:
         # Route through compute router
@@ -1577,7 +1577,7 @@ async def mobile_generate_fixed(request: Request, mobile_request: MobileGenerate
 
 @app.post("/api/v1/mobile/switch", tags=["📱 Mobile Platform"])
 @limiter.limit("20/minute")
-async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, auth=Depends(verify_dual_auth)):
     """🔄 Mobile Switch"""
     try:
         # Get existing spec (mock for mobile)
@@ -1629,7 +1629,7 @@ async def mobile_switch(request: Request, mobile_request: MobileSwitchRequest, a
 
 @app.post("/api/v1/vr/generate", tags=["🥽 VR/AR Platform"])
 @limiter.limit("10/minute")
-async def vr_generate_fixed(request: Request, vr_request: VRGenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def vr_generate_fixed(request: Request, vr_request: VRGenerateRequest, auth=Depends(verify_dual_auth)):
     """🥽 VR Generate Fixed"""
     try:
         vr_scene = vr_stubs.generate_vr_scene(vr_request)
@@ -1645,7 +1645,7 @@ async def vr_generate_fixed(request: Request, vr_request: VRGenerateRequest, api
 
 @app.post("/api/v1/ar/overlay", tags=["🥽 VR/AR Platform"])
 @limiter.limit("10/minute")
-async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def ar_overlay(request: Request, ar_request: AROverlayRequest, auth=Depends(verify_dual_auth)):
     """📲 AR Overlay"""
     try:
         ar_overlay = vr_stubs.create_ar_overlay(ar_request)
@@ -1661,7 +1661,7 @@ async def ar_overlay(request: Request, ar_request: AROverlayRequest, api_key: st
 
 @app.get("/api/v1/vr/platforms", tags=["🥽 VR/AR Platform"])
 @limiter.limit("20/minute")
-async def vr_platforms_fixed(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def vr_platforms_fixed(request: Request, auth=Depends(verify_dual_auth)):
     """🥽 VR Platforms Fixed"""
     try:
         platforms = {
@@ -1685,7 +1685,7 @@ async def vr_platforms_fixed(request: Request, api_key: str = Depends(verify_api
 
 @app.post("/api/v1/core/run", tags=["🎛️ Core Orchestration"])
 @limiter.limit("10/minute")
-async def run_core_pipeline(request: Request, core_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def run_core_pipeline(request: Request, core_data: dict, auth=Depends(verify_dual_auth)):
     """⚡ Run Core Pipeline"""
     try:
         prompt = core_data.get('prompt', 'Default design')
@@ -1711,7 +1711,7 @@ async def run_core_pipeline(request: Request, core_data: dict, api_key: str = De
 
 @app.get("/api/v1/costs/daily", tags=["💰 Cost Management"])
 @limiter.limit("20/minute")
-async def get_daily_costs(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_daily_costs(request: Request, auth=Depends(verify_dual_auth)):
     """📊 Get Daily Costs"""
     try:
         # Mock daily cost data
@@ -1734,7 +1734,7 @@ async def get_daily_costs(request: Request, api_key: str = Depends(verify_api_ke
 
 @app.get("/api/v1/costs/weekly", tags=["💰 Cost Management"])
 @limiter.limit("20/minute")
-async def get_weekly_costs(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_weekly_costs(request: Request, auth=Depends(verify_dual_auth)):
     """📈 Get Weekly Costs"""
     try:
         # Mock weekly cost data
@@ -1760,7 +1760,7 @@ async def get_weekly_costs(request: Request, api_key: str = Depends(verify_api_k
 
 @app.get("/api/v1/compute/stats", tags=["💰 Cost Management"])
 @limiter.limit("20/minute")
-async def get_compute_stats(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_compute_stats(request: Request, auth=Depends(verify_dual_auth)):
     """🖥️ Get Compute Stats"""
     try:
         compute_stats = compute_router.get_job_stats()
@@ -1775,7 +1775,7 @@ async def get_compute_stats(request: Request, api_key: str = Depends(verify_api_
 
 @app.get("/api/v1/compute/status", tags=["💰 Cost Management"])
 @limiter.limit("20/minute")
-async def get_compute_status(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def get_compute_status(request: Request, auth=Depends(verify_dual_auth)):
     """⚡ Get Compute Status"""
     try:
         # Mock compute status
@@ -1803,7 +1803,7 @@ async def get_compute_status(request: Request, api_key: str = Depends(verify_api
 
 @app.post("/api/v1/demo/end-to-end", tags=["🎆 Demo Flow"])
 @limiter.limit("5/minute")
-async def run_end_to_end_demo(request: Request, demo_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def run_end_to_end_demo(request: Request, demo_data: dict, auth=Depends(verify_dual_auth)):
     """🎆 Run End To End Demo"""
     try:
         prompt = demo_data.get('prompt', 'Demo building design')
