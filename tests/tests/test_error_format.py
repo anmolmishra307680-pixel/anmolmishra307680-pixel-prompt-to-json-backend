@@ -16,7 +16,7 @@ def test_value_error_format():
     os.environ["DEMO_PASSWORD"] = "bhiv2024"
     
     # Get proper auth token first
-    token_response = client.post("/token", 
+    token_response = client.post("/api/v1/auth/login", 
                                 json={"username": "admin", "password": "bhiv2024"},
                                 headers={"X-API-Key": "bhiv-secret-key-2024"})
     

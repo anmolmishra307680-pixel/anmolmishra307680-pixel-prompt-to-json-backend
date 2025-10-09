@@ -30,8 +30,8 @@ def get_auth_headers():
         }
     
     try:
-        # Token endpoint now requires API key
-        token_response = client.post("/token", 
+        # Use enhanced login endpoint
+        token_response = client.post("/api/v1/auth/login", 
                                    json={"username": USERNAME, "password": PASSWORD},
                                    headers={"X-API-Key": API_KEY})
         if token_response.status_code == 200:
