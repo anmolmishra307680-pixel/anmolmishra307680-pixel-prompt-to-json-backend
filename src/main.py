@@ -124,6 +124,12 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
     )
     return api_key
 
+def verify_dual_auth(api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+    """Verify both API key and JWT token are present and valid"""
+    # Both dependencies will raise HTTPException if invalid
+    # If we reach here, both are valid
+    return {"api_key": api_key, "user": user}
+
 app = FastAPI(
     title="Prompt-to-JSON API",
     version=API_VERSION,
@@ -199,16 +205,16 @@ def custom_openapi():
                         if param.get("name") not in ["authorization", "Authorization", "X-API-Key"]
                     ]
 
-                if path == "/token":
-                    # Token endpoint requires only API key
+                if path == "/health" or path == "/ping" or path == "/" or path == "/metrics":
+                    # Public endpoints for monitoring
+                    operation["security"] = []
+                elif path.startswith("/api/v1/auth/"):
+                    # Auth endpoints require only API key
                     operation["security"] = [
                         {"APIKeyHeader": []}
                     ]
-                elif path == "/health":
-                    # Health endpoint is public for monitoring
-                    operation["security"] = []
                 else:
-                    # All other endpoints require both
+                    # All other endpoints require both API key AND JWT
                     operation["security"] = [
                         {"APIKeyHeader": [], "BearerAuth": []}
                     ]
@@ -272,9 +278,7 @@ class IterateRequest(BaseModel):
     prompt: str
     n_iter: int = 3
 
-class TokenRequest(BaseModel):
-    username: str
-    password: str
+
 
 # ============================================================================
 # 🔐 AUTHENTICATION & SECURITY
@@ -306,26 +310,7 @@ async def login_v2(request: Request, login_data: LoginRequest, api_key: str = De
         system_monitor.increment_errors()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/token", tags=["🔐 Authentication & Security"])
-@limiter.limit("10/minute")
-async def get_token(request: Request, token_data: TokenRequest, api_key: str = Depends(verify_api_key)):
-    """🔑 Get JWT token (legacy endpoint for tests)"""
-    try:
-        # Validate credentials
-        demo_username = os.getenv("DEMO_USERNAME", "admin")
-        demo_password = os.getenv("DEMO_PASSWORD", "bhiv2024")
-        
-        if token_data.username == demo_username and token_data.password == demo_password:
-            # Create simple token response for tests
-            token = create_access_token(data={"username": token_data.username})
-            return {"access_token": token, "token_type": "bearer"}
-        
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/v1/auth/refresh", tags=["🔐 Authentication & Security"])
 @limiter.limit("20/minute")
@@ -398,7 +383,7 @@ async def ping():
 
 @app.get("/basic-metrics", tags=["📊 System Monitoring"])
 @limiter.limit("20/minute")
-async def basic_metrics(request: Request, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def basic_metrics(request: Request, auth=Depends(verify_dual_auth)):
     """📈 Basic Metrics"""
     try:
         from pathlib import Path
@@ -614,7 +599,7 @@ async def get_sentry_status(request: Request, api_key: str = Depends(verify_api_
 
 @app.post("/generate", tags=["🤖 Core AI Generation"])
 @limiter.limit("20/minute")
-async def generate_spec(request: Request, generate_request: GenerateRequest, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def generate_spec(request: Request, generate_request: GenerateRequest, auth=Depends(verify_dual_auth)):
     """🎨 Generate specification from prompt"""
     start_time = time.time()
     try:
@@ -947,7 +932,7 @@ async def run_compliance_pipeline(request: Request, pipeline_data: dict, api_key
 
 @app.post("/evaluate", tags=["🧠 AI Evaluation & Improvement"])
 @limiter.limit("20/minute")
-async def evaluate_spec(request: Request, eval_data: dict, api_key: str = Depends(verify_api_key), user=Depends(get_current_user)):
+async def evaluate_spec(request: Request, eval_data: dict, auth=Depends(verify_dual_auth)):
     """📈 Evaluate specification"""
     try:
         from src.schemas.legacy_schema import DesignSpec, MaterialSpec, DimensionSpec
