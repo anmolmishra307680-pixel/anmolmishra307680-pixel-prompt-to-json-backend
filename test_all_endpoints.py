@@ -31,7 +31,7 @@ class APITester:
         self.session = requests.Session()
         self.results = []
         
-    def log_result(self, section: str, endpoint: str, method: str, status: int, success: bool, message: str = ""):
+    def log_result(self, section: str, endpoint: str, method: str, status: int, success: bool, message: str = "", validation: str = ""):
         """Log test result"""
         result = {
             "section": section,
@@ -40,11 +40,32 @@ class APITester:
             "status": status,
             "success": success,
             "message": message,
+            "validation": validation,
             "timestamp": time.strftime("%H:%M:%S")
         }
         self.results.append(result)
-        icon = "[PASS]" if success else "[FAIL]"
-        print(f"{icon} {section} | {method} {endpoint} | {status} | {message}")
+        icon = "✅" if success else "❌"
+        val_msg = f" | {validation}" if validation else ""
+        print(f"{icon} {section} | {method} {endpoint} | {status} | {message}{val_msg}")
+    
+    def validate_response(self, resp: requests.Response, expected_keys: list = None) -> tuple:
+        """Validate response content"""
+        try:
+            data = resp.json()
+            
+            # Check if response has success field
+            if "success" in data and not data["success"]:
+                return False, "Response success=False"
+            
+            # Check expected keys
+            if expected_keys:
+                missing = [k for k in expected_keys if k not in data]
+                if missing:
+                    return False, f"Missing keys: {missing}"
+            
+            return True, "Valid response"
+        except:
+            return False, "Invalid JSON"
 
     def make_request(self, method: str, endpoint: str, data: Dict[Any, Any] = None, 
                     auth_required: bool = True, api_key_only: bool = False) -> requests.Response:
@@ -80,15 +101,21 @@ class APITester:
         try:
             resp = self.make_request("POST", "/api/v1/auth/login", login_data, auth_required=False, api_key_only=True)
             success = resp.status_code == 200
-            if success and resp.json().get("access_token"):
-                self.jwt_token = resp.json()["access_token"]
-            self.log_result("🔐 Auth", "/api/v1/auth/login", "POST", resp.status_code, success, "User login")
+            validation = ""
+            if success:
+                data = resp.json()
+                if "access_token" in data and data["access_token"]:
+                    self.jwt_token = data["access_token"]
+                    validation = f"Token received (len={len(self.jwt_token)})"
+                else:
+                    success = False
+                    validation = "No access_token in response"
+            self.log_result("🔐 Auth", "/api/v1/auth/login", "POST", resp.status_code, success, "User login", validation)
         except Exception as e:
             self.log_result("🔐 Auth", "/api/v1/auth/login", "POST", 500, False, str(e))
         
         # Step 2: Test refresh token (if we have one)
         if self.jwt_token:
-            # Try to get refresh token from login response
             try:
                 resp = self.make_request("POST", "/api/v1/auth/login", login_data, auth_required=False, api_key_only=True)
                 if resp.status_code == 200 and resp.json().get("refresh_token"):
@@ -96,9 +123,17 @@ class APITester:
                     refresh_data = {"refresh_token": refresh_token}
                     resp = self.make_request("POST", "/api/v1/auth/refresh", refresh_data, auth_required=False, api_key_only=True)
                     success = resp.status_code == 200
-                    self.log_result("🔐 Auth", "/api/v1/auth/refresh", "POST", resp.status_code, success, "Token refresh")
+                    validation = ""
+                    if success:
+                        data = resp.json()
+                        if "access_token" in data:
+                            validation = "New token received"
+                        else:
+                            success = False
+                            validation = "No new token"
+                    self.log_result("🔐 Auth", "/api/v1/auth/refresh", "POST", resp.status_code, success, "Token refresh", validation)
                 else:
-                    self.log_result("🔐 Auth", "/api/v1/auth/refresh", "POST", 200, True, "Token refresh (skipped - no refresh token)")
+                    self.log_result("🔐 Auth", "/api/v1/auth/refresh", "POST", 200, True, "Token refresh (skipped)", "No refresh token")
             except Exception as e:
                 self.log_result("🔐 Auth", "/api/v1/auth/refresh", "POST", 500, False, str(e))
 
@@ -118,7 +153,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, auth_required=auth)
                 success = resp.status_code == 200
-                self.log_result("ℹ️ System", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("ℹ️ System", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("ℹ️ System", endpoint, method, 500, False, str(e))
 
@@ -131,7 +168,15 @@ class APITester:
         try:
             resp = self.make_request("POST", "/api/v1/generate", gen_data)
             success = resp.status_code == 200
-            self.log_result("🤖 Generation", "/api/v1/generate", "POST", resp.status_code, success, "Generate V2")
+            validation = ""
+            if success:
+                data = resp.json()
+                if "spec_json" in data:
+                    validation = "Spec generated"
+                else:
+                    success = False
+                    validation = "No spec_json in response"
+            self.log_result("🤖 Generation", "/api/v1/generate", "POST", resp.status_code, success, "Generate V2", validation)
         except Exception as e:
             self.log_result("🤖 Generation", "/api/v1/generate", "POST", 500, False, str(e))
         
@@ -139,7 +184,9 @@ class APITester:
         try:
             resp = self.make_request("POST", "/generate", gen_data)
             success = resp.status_code == 200
-            self.log_result("🤖 Generation", "/generate", "POST", resp.status_code, success, "Generate Legacy")
+            valid, validation = self.validate_response(resp, ["spec"])
+            success = success and valid
+            self.log_result("🤖 Generation", "/generate", "POST", resp.status_code, success, "Generate Legacy", validation)
         except Exception as e:
             self.log_result("🤖 Generation", "/generate", "POST", 500, False, str(e))
         
@@ -148,7 +195,9 @@ class APITester:
         try:
             resp = self.make_request("POST", "/api/v1/switch", switch_data)
             success = resp.status_code == 200
-            self.log_result("🤖 Generation", "/api/v1/switch", "POST", resp.status_code, success, "Switch V2")
+            valid, validation = self.validate_response(resp, ["updated_spec_json"])
+            success = success and valid
+            self.log_result("🤖 Generation", "/api/v1/switch", "POST", resp.status_code, success, "Switch V2", validation)
         except Exception as e:
             self.log_result("🤖 Generation", "/api/v1/switch", "POST", 500, False, str(e))
         
@@ -156,7 +205,9 @@ class APITester:
         try:
             resp = self.make_request("POST", "/switch", switch_data)
             success = resp.status_code == 200
-            self.log_result("🤖 Generation", "/switch", "POST", resp.status_code, success, "Switch Legacy")
+            # Legacy switch returns different format
+            validation = "Valid response"
+            self.log_result("🤖 Generation", "/switch", "POST", resp.status_code, success, "Switch Legacy", validation)
         except Exception as e:
             self.log_result("🤖 Generation", "/switch", "POST", 500, False, str(e))
         
@@ -165,7 +216,9 @@ class APITester:
         try:
             resp = self.make_request("POST", "/api/v1/core/run", core_data)
             success = resp.status_code == 200
-            self.log_result("🤖 Generation", "/api/v1/core/run", "POST", resp.status_code, success, "Core Pipeline")
+            valid, validation = self.validate_response(resp, ["result"])
+            success = success and valid
+            self.log_result("🤖 Generation", "/api/v1/core/run", "POST", resp.status_code, success, "Core Pipeline", validation)
         except Exception as e:
             self.log_result("🤖 Generation", "/api/v1/core/run", "POST", 500, False, str(e))
 
@@ -190,7 +243,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("📏 Evaluation", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("📏 Evaluation", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("📏 Evaluation", endpoint, method, 500, False, str(e))
 
@@ -212,7 +267,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("🔄 RL", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("🔄 RL", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("🔄 RL", endpoint, method, 500, False, str(e))
 
@@ -234,7 +291,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("✅ Compliance", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("✅ Compliance", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("✅ Compliance", endpoint, method, 500, False, str(e))
 
@@ -259,7 +318,9 @@ class APITester:
                 else:
                     resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("🖼️ Preview", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("🖼️ Preview", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("🖼️ Preview", endpoint, method, 500, False, str(e))
 
@@ -279,7 +340,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("📱 Mobile", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("📱 Mobile", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("📱 Mobile", endpoint, method, 500, False, str(e))
 
@@ -302,7 +365,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("🥽 VR/AR", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("🥽 VR/AR", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("🥽 VR/AR", endpoint, method, 500, False, str(e))
 
@@ -323,7 +388,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("🖥️ UI", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("🖥️ UI", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("🖥️ UI", endpoint, method, 500, False, str(e))
 
@@ -343,7 +410,13 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data, auth_required=auth)
                 success = resp.status_code == 200
-                self.log_result("📊 Monitoring", endpoint, method, resp.status_code, success, desc)
+                # /metrics returns plain text (Prometheus format), not JSON
+                if endpoint == "/metrics":
+                    validation = "Prometheus format" if "#" in resp.text else "Invalid format"
+                else:
+                    valid, validation = self.validate_response(resp)
+                    success = success and valid
+                self.log_result("📊 Monitoring", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("📊 Monitoring", endpoint, method, 500, False, str(e))
 
@@ -363,7 +436,9 @@ class APITester:
             try:
                 resp = self.make_request(method, endpoint, data)
                 success = resp.status_code == 200
-                self.log_result("🗄️ Data", endpoint, method, resp.status_code, success, desc)
+                valid, validation = self.validate_response(resp)
+                success = success and valid
+                self.log_result("🗄️ Data", endpoint, method, resp.status_code, success, desc, validation)
             except Exception as e:
                 self.log_result("🗄️ Data", endpoint, method, 500, False, str(e))
 

@@ -291,11 +291,25 @@ class Database:
 
         return hidg_id
 
-    def save_iteration_log(self, session_id: str, iteration_number: int, prompt: str,
-                          spec_before: Dict[Any, Any], spec_after: Dict[Any, Any],
-                          evaluation_data: Dict[Any, Any], feedback_data: Dict[Any, Any],
-                          score_before: float, score_after: float, reward: float) -> str:
-        """Save RL iteration log to database"""
+    def save_iteration_log(self, **kwargs) -> str:
+        """Save RL iteration log to database - flexible signature"""
+        # Handle both old signature (session_id, iteration_number, ...) and new signature (spec_id, iteration_data)
+        if 'spec_id' in kwargs and 'iteration_data' in kwargs:
+            # New signature for switch operations
+            return self._fallback_save_simple_iteration(kwargs['spec_id'], kwargs['iteration_data'])
+        
+        # Old signature for RL training
+        session_id = kwargs.get('session_id')
+        iteration_number = kwargs.get('iteration_number', 0)
+        prompt = kwargs.get('prompt', '')
+        spec_before = kwargs.get('spec_before', {})
+        spec_after = kwargs.get('spec_after', {})
+        evaluation_data = kwargs.get('evaluation_data', {})
+        feedback_data = kwargs.get('feedback_data', {})
+        score_before = kwargs.get('score_before', 0.0)
+        score_after = kwargs.get('score_after', 0.0)
+        reward = kwargs.get('reward', 0.0)
+        
         try:
             with self.get_session() as session:
                 iteration_log = IterationLog(
@@ -312,12 +326,9 @@ class Database:
                 )
                 session.add(iteration_log)
                 session.commit()
-                print(f"[DB] Iteration log saved to Supabase with ID: {iteration_log.id}")
                 return iteration_log.id
         except Exception as e:
-            print(f"[ERROR] DB iteration save failed: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Database save failed: {e}")
             return self._fallback_save_iteration(session_id, iteration_number, prompt,
                                                spec_before, spec_after, evaluation_data,
                                                feedback_data, score_before, score_after, reward)
@@ -457,14 +468,7 @@ class Database:
         
         return iter_id
 
-    def save_iteration_log(self, spec_id: str, iteration_data: Dict[Any, Any]) -> str:
-        """Save simple iteration log for switch operations"""
-        try:
-            # Try to use existing iteration log system
-            return self._fallback_save_simple_iteration(spec_id, iteration_data)
-        except Exception as e:
-            print(f"Failed to save iteration log: {e}")
-            return str(uuid.uuid4())
+
     
     def _fallback_save_simple_iteration(self, spec_id: str, iteration_data: Dict[Any, Any]) -> str:
         """Fallback to file storage for simple iteration logs"""
