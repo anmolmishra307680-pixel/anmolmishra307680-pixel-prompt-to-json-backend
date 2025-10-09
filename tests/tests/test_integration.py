@@ -100,10 +100,15 @@ class TestFullWorkflow:
         """Test monitoring endpoints"""
         headers = get_auth_headers()
         
-        # Health check (now requires dual auth)
-        health_response = client.get("/health", headers=headers)
+        # Health check (public for Docker/CI)
+        health_response = client.get("/health")
         assert health_response.status_code == 200
         assert "status" in health_response.json()
+        
+        # Ping check (public for Docker/CI)
+        ping_response = client.get("/ping")
+        assert ping_response.status_code == 200
+        assert "message" in ping_response.json()
         
         # Metrics (requires dual auth)
         metrics_response = client.get("/metrics", headers=headers)

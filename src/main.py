@@ -210,6 +210,9 @@ def custom_openapi():
                     operation["security"] = [
                         {"APIKeyHeader": []}
                     ]
+                elif path in ["/health", "/ping"]:
+                    # Public endpoints for Docker/CI monitoring
+                    operation["security"] = []
                 else:
                     # All other endpoints require both API key AND JWT
                     operation["security"] = [
@@ -349,9 +352,9 @@ async def root_head(request: Request, auth=Depends(verify_dual_auth)):
     return Response()
 
 @app.get("/health", tags=["📊 System Monitoring"])
-@limiter.limit("20/minute")
-async def health_check(request: Request, auth=Depends(verify_dual_auth)):
-    """❤️ Public health check endpoint for monitoring"""
+@limiter.limit("100/minute")
+async def health_check(request: Request):
+    """❤️ Public health check endpoint for Docker/CI monitoring"""
     try:
         # Test database connection
         session = db.get_session()
@@ -375,9 +378,9 @@ async def health_check(request: Request, auth=Depends(verify_dual_auth)):
     }
 
 @app.get("/ping", tags=["📊 System Monitoring"])
-@limiter.limit("20/minute")
-async def ping(request: Request, auth=Depends(verify_dual_auth)):
-    """🏓 Simple ping endpoint"""
+@limiter.limit("100/minute")
+async def ping(request: Request):
+    """🏓 Public ping endpoint for Docker/CI monitoring"""
     return {"message": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/basic-metrics", tags=["📊 System Monitoring"])
